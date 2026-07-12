@@ -31,7 +31,7 @@ I know that failure mode intimately, because this tool did it to me before I fix
 Also:
 
 - **Chest library.** Save a chest under a name. On your next visit it is recognised by its starting layout and hands you a ready sequence — nothing to re-enter.
-- **It catches its own mistakes.** It warns when links come out one-sided (in this game coupled plates always pull each other *both* ways, so a one-way link means a misread), it refuses impossible readings, and when you report a grind on the first move it tells you **which link must have been recorded with the wrong sign**.
+- **Phone-first.** Big touch targets, everything you need under your thumb, and it can be added to the home screen. Meant to be held in one hand while the other one plays.
 
 ## A tip from outside the tool
 
@@ -79,7 +79,7 @@ Ten sposób psucia się znam z pierwszej ręki, bo to narzędzie zrobiło mi to 
 Poza tym:
 
 - **Biblioteka skrzyń.** Zapisujesz skrzynię pod nazwą. Przy powrocie rozpoznaje ją po układzie startowym i podaje gotową sekwencję — bez żadnego wpisywania.
-- **Wykrywa własne błędy.** Ostrzega, gdy powiązania wychodzą jednostronne (w tej grze sprzężone płytki ciągną się *wzajemnie*, więc jednostronne = przeoczony odczyt), odrzuca niemożliwe odczyty, a gdy zgłosisz zgrzyt na pierwszym ruchu — wskazuje, **które powiązanie musiało zostać zapisane z odwrotnym znakiem**.
+- **Pod telefon.** Duże cele do kliknięcia, wszystko potrzebne pod kciukiem, da się dodać do ekranu początkowego. Ma się trzymać w jednej ręce, gdy druga gra.
 
 ## Wskazówka spoza narzędzia
 
