@@ -2,7 +2,12 @@
 <html lang="pl">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wytrych">
+<meta name="theme-color" content="#DAD9D3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#14181A" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Solver zamków do Gothic 1 Remake. Rozpoznaje powiązania płytek i liczy najkrótszą sekwencję ruchów, w której wytrych się nie wygnie.">
 <title>Wytrych — solver zamków do Gothic 1 Remake</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>%F0%9F%97%9D%EF%B8%8F</text></svg>">
@@ -68,6 +73,13 @@
   }
 
   * { box-sizing: border-box; }
+
+  /* Touch: no 300ms delay, no blue flash, no accidental text selection while tapping fast. */
+  button, .hole, summary {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .lock, .keys, .plate-name { -webkit-user-select: none; user-select: none; }
 
   body {
     margin: 0;
@@ -285,7 +297,18 @@
 
   @media (prefers-reduced-motion: reduce) { .pin { transition: none; } }
 
-  @media (max-width: 520px) { .lock { --hole: 20px; } }
+  /* Apple asks for 44px touch targets. Below the desktop layout we hand the holes every
+     pixel the viewport can spare, capped at 44, rather than shrinking them to 20. */
+  @media (max-width: 860px) {
+    .wrap { padding-left: 10px; padding-right: 10px; }
+    .lock {
+      --hole: min(44px, calc((100vw - 96px) / 7));
+      padding: 10px 8px 8px;
+    }
+    #plates { gap: 5px; padding: 8px 0; }
+    .plate { grid-template-columns: 12px auto; gap: 6px; }
+    .holes { gap: 3px; padding: 5px 6px; }
+  }
 
   /* ---- panels ---- */
   .card {
@@ -324,6 +347,11 @@
     transition: background .12s ease, border-color .12s ease;
   }
   button:hover { border-color: var(--verdigris); }
+  button:active { transform: translateY(1px); }
+  @media (pointer: coarse) {
+    button { min-height: 44px; padding: 10px 16px; }
+    .seg button, .saved-item .del { min-height: 40px; }
+  }
   button:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
   button.primary {
     background: var(--verdigris);
@@ -444,7 +472,7 @@
     flex: 1 1 12em;
     min-width: 0;
     font: inherit;
-    font-size: 14px;
+    font-size: 16px;          /* below 16px Safari zooms the whole page on focus */
     color: var(--text);
     background: var(--panel-2);
     border: 1px solid var(--line);
@@ -543,6 +571,50 @@
   table.matrix th { color: var(--text); font-weight: 600; }
   table.matrix td.same { color: var(--verdigris); }
   table.matrix td.opp  { color: var(--blood); }
+
+  /* On a touchscreen :hover latches on after a tap and stays lit. Neutralise it. */
+  @media (hover: none) {
+    button:hover { border-color: var(--line); }
+    button.primary:hover { filter: none; }
+    button.danger:hover { border-color: var(--line); }
+    .lock.is-pickable .hole:hover {
+      box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 1px 0 rgba(255,255,255,.1);
+    }
+    .theme-toggle:hover { color: var(--text-dim); border-color: var(--line-soft); }
+    .saved-item .del:hover { color: var(--text-dim); border-color: transparent; }
+    .lock-actions button:hover { border-color: rgba(255,255,255,.18); color: #C8CFCD; }
+    .hole:active { box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 0 0 2px var(--verdigris); }
+  }
+
+  /* Phone: the one thing you must do, always within thumb reach — so you tap the lock at
+     the top of the screen and confirm at the bottom, without scrolling between them. */
+  .thumb-bar { display: none; }
+  @media (max-width: 860px) {
+    .thumb-bar {
+      display: flex;
+      position: fixed;
+      left: 0; right: 0; bottom: 0;
+      z-index: 20;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      background: color-mix(in srgb, var(--panel) 92%, transparent);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line-soft);
+    }
+    .thumb-bar .tb-text {
+      flex: 1 1 auto;
+      min-width: 0;
+      font-size: 14px;
+      line-height: 1.35;
+      color: var(--text-dim);
+    }
+    .thumb-bar .tb-text b { color: var(--text); }
+    .thumb-bar button { flex: 0 0 auto; font-weight: 600; }
+    .wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
+    .theme-toggle { top: calc(10px + env(safe-area-inset-top)); }
+  }
 
   footer {
     font-size: 13px;
@@ -700,6 +772,11 @@
   </footer>
 </div>
 
+<div class="thumb-bar" id="thumbBar" role="region" aria-label="Bieżące zadanie">
+  <span class="tb-text" id="tbText"></span>
+  <button class="primary" id="tbAction" type="button">Dalej</button>
+</div>
+
 <script>
 (function () {
   "use strict";
@@ -784,7 +861,7 @@
     if (!Array.isArray(d.pos) || d.pos.length !== d.n) { return false; }
 
     S.n = d.n;
-    S.pos = d.pos.map(function (v) { return clamp(v | 0); });
+    S.pos = d.pos.map(function (v) { return v === -1 ? -1 : clamp(v | 0); });
     S.startPos = validPins(d.startPos, d.n) ? d.startPos.slice() : S.pos.slice();
     S.E = Array.isArray(d.E) ? d.E : [];
     S.loadedName = d.loadedName || "";
@@ -865,7 +942,7 @@
     } else {
       // Saved before pins were remembered: links only, so ask for the pins.
       S.pos = [];
-      for (var i = 0; i < S.n; i++) { S.pos.push(TARGET); }
+      for (var i = 0; i < S.n; i++) { S.pos.push(-1); }
       S.startPos = [];
       S.justLoaded = false;
       S.stage = "setup";
@@ -933,12 +1010,20 @@
     }
   }
 
+  function placedCount() {
+    var c = 0;
+    for (var i = 0; i < S.n; i++) { if (S.pos[i] >= 0) { c++; } }
+    return c;
+  }
+
   function renderSetup() {
     renderPlateCount();
 
     var known = linksKnown();
     var banner = $("knownBanner");
+    var placed = validPins(S.pos, S.n);
     $("toProbe").textContent = known ? "Policz sekwencję →" : "Zapadki ustawione →";
+    $("toProbe").disabled = !placed;
     $("reProbe").classList.toggle("hidden", !known);
 
     if (known) {
@@ -1032,7 +1117,10 @@
                                 S.stage === "probe" ? "Rozpoznanie" : "Otwieranie";
     $("lockStatus").textContent =
       done === S.n ? "Zamek otwarty." :
-      S.stage === "setup" ? "Kliknij otwór, w którym zapadka siedzi TERAZ." :
+      S.stage === "setup"
+        ? (placedCount() === S.n
+            ? "Wszystkie zapadki ustawione."
+            : "Kliknij otwór, w którym zapadka siedzi TERAZ — zostało " + (S.n - placedCount()) + " z " + S.n + ".") :
       S.stage === "probe" ? "Odczytaj zamek: kliknij otwór każdej zapadki." :
       (S.runIdx === 0 ? "Pozycja wyjściowa — stąd liczę sekwencję." :
         "Po " + S.runIdx + " " + plStep(S.runIdx) + " sekwencji.");
@@ -1099,7 +1187,7 @@
     }
     S.n = n;
     S.pos = [];
-    for (var i = 0; i < n; i++) { S.pos.push(TARGET); }
+    for (var i = 0; i < n; i++) { S.pos.push(-1); }   // -1 = not read yet, no pin drawn
     render();
   }
 
@@ -1942,6 +2030,63 @@
     solveAndRender();
   }
 
+  /* ---------------- the thumb bar ----------------
+     On a phone the lock lives at the top of the screen and the step card scrolls below it.
+     This bar mirrors the single thing you must do right now, and its button drives the very
+     same handler as the one in the card — so there is one source of truth, not two. */
+
+  function renderThumbBar() {
+    var text = $("tbText"), act = $("tbAction");
+
+    if (S.stage === "setup") {
+      var left = S.n - placedCount();
+      text.innerHTML = left === 0
+        ? "<b>Zapadki ustawione.</b> " + (linksKnown() ? "Powiązania już znam." : "Teraz rozpoznanie.")
+        : "Kliknij na zamku otwór każdej zapadki — <b>zostało " + left + "</b>.";
+      act.textContent = linksKnown() ? "Policz" : "Dalej";
+      act.disabled = (left !== 0);
+      return;
+    }
+
+    if (S.stage === "probe") {
+      var free = S.freeMove;
+      var plate = free ? free.plate : S.probeIdx;
+      var dir = free ? free.dir : S.probeDir;
+      var read = readCount();
+      text.innerHTML = "<b>Płytka " + (plate + 1) + " " + (dir === 1 ? "→ w prawo" : "← w lewo") +
+        "</b> · odczytane " + read + "/" + S.n;
+      act.textContent = "Dalej";
+      act.disabled = (read !== S.n);
+      return;
+    }
+
+    // solve
+    if (S.unsolvable) {
+      text.innerHTML = "<b>Coś się nie zgadza</b> · sprawdź tropy niżej";
+      act.textContent = "Dalej";
+      act.disabled = true;
+      return;
+    }
+    if (S.runIdx >= S.grouped.length) {
+      text.innerHTML = "<b>Zamek otwarty.</b>";
+      act.textContent = "Gotowe";
+      act.disabled = true;
+      return;
+    }
+    var run = S.grouped[S.runIdx];
+    text.innerHTML = "<b>Płytka " + (run.plate + 1) + " " +
+      (run.dir === 1 ? "→ w prawo" : "← w lewo") + " ×" + run.count + "</b>" +
+      (S.needsReset ? " · najpierw Reset w grze" : "");
+    act.textContent = "Zrobione";
+    act.disabled = false;
+  }
+
+  function thumbAction() {
+    if (S.stage === "setup") { $("toProbe").click(); return; }
+    if (S.stage === "probe") { confirmProbe(); return; }
+    stepDone();
+  }
+
   /* ---------------- master render ---------------- */
 
   function render() {
@@ -1957,6 +2102,7 @@
     if (S.stage === "probe") { renderProbe(); }
     if (S.stage === "solve") { renderSolve(); }
 
+    renderThumbBar();
     persistSession();
   }
 
@@ -1984,6 +2130,7 @@
     S.startPos = S.pos.slice();
     startProbe();
   });
+  $("tbAction").addEventListener("click", thumbAction);
   $("resetToStart").addEventListener("click", resetToStart);
   $("noReset").addEventListener("click", function () {
     if (validPins(S.probeEndPos, S.n)) { S.pos = S.probeEndPos.slice(); }
