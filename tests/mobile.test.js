@@ -25,15 +25,20 @@ byId.get("tbAction").click();                       // drive the app from the ba
 check("przycisk paska wchodzi w rozpoznanie", !hidden(byId,"cardProbe"));
 
 // ---------- step 2: the bar must enforce the same rule as the card ----------
+// Discovery now starts with whichever plate is furthest from the edges, not blindly plate 1.
+const firstTitle = byId.get("probeTitle").innerHTML;
+const firstPlate = parseInt(firstTitle.replace(/\D/g,""),10);
 check("pasek mówi, którą płytkę i w którą stronę",
-      /Płytka 1 → w prawo/.test(byId.get("tbText").innerHTML), byId.get("tbText").innerHTML);
-check("pasek liczy odczytane zapadki",
-      byId.get("tbText").innerHTML.includes("odczytane 0/5"), byId.get("tbText").innerHTML);
+      new RegExp(`Płytka ${firstPlate} [→←] w (prawo|lewo)`).test(byId.get("tbText").innerHTML),
+      byId.get("tbText").innerHTML);
+check("pasek liczy potwierdzone zapadki",
+      byId.get("tbText").innerHTML.includes("0/5"), byId.get("tbText").innerHTML);
 check("BLOKUJE dalej, dopóki nie odczytasz wszystkich — tak jak przycisk w karcie",
       byId.get("tbAction").disabled === true && byId.get("probeConfirm").disabled === true);
 
 // read four of five: still blocked
-const lock = C.pins.map((v,j) => v + C.E[0][j]);
+const dir0 = firstTitle.includes("→") ? 1 : -1;
+const lock = C.pins.map((v,j) => v + dir0 * C.E[firstPlate-1][j]);
 for (let j=0;j<4;j++) holesFor(byId,j)[lock[j]].click();
 check("cztery z pięciu — nadal zablokowany", byId.get("tbAction").disabled === true,
       byId.get("tbText").innerHTML);
@@ -41,8 +46,10 @@ holesFor(byId,4)[lock[4]].click();
 check("piąta odczytana — odblokowany", byId.get("tbAction").disabled === false);
 
 byId.get("tbAction").click();
-check("pasek przesuwa rozpoznanie na płytkę 2",
-      /Płytka 2/.test(byId.get("tbText").innerHTML), byId.get("tbText").innerHTML);
+const nextPlate = parseInt(byId.get("probeTitle").innerHTML.replace(/\D/g,""),10);
+check("pasek przesuwa rozpoznanie na KOLEJNĄ płytkę",
+      nextPlate !== firstPlate && /Płytka \d/.test(byId.get("tbText").innerHTML),
+      `${firstPlate} -> ${nextPlate}`);
 
 // ---------- finish discovery normally, then drive step 3 from the bar ----------
 ({ byId } = boot());

@@ -179,6 +179,39 @@
   .byline a:hover { border-bottom-color: var(--verdigris); }
   .byline a:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
 
+  /* ---- phases: where you are, and nothing else ---- */
+  .phases-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .phases { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .phase {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    padding: 6px 10px;
+    border: 1px solid var(--line-soft);
+    border-radius: 999px;
+    white-space: nowrap;
+  }
+  .phase b { font-weight: 700; opacity: .55; }
+  .phase.is-now {
+    color: var(--panel);
+    background: var(--verdigris);
+    border-color: var(--verdigris);
+  }
+  .phase.is-now b { opacity: 1; }
+  .phase.is-done { color: var(--verdigris); border-color: var(--verdigris); }
+  .help-toggle {
+    margin-left: auto;
+    font-size: 12px;
+    padding: 6px 10px;
+    background: transparent;
+    color: var(--text-dim);
+  }
+
+  /* Explanations earn their keep the first time and become noise the twentieth. */
+  body.hide-help .help { display: none !important; }
+
   /* ---- the lock: a window into the game, so it stays dark in both themes ---- */
   .lock {
     --hole: 26px;
@@ -278,6 +311,8 @@
   .hole.is-center {
     box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 0 0 1px rgba(232,135,90,.5);
   }
+  /* a hole this pin cannot possibly have reached in one move */
+  .hole.out-of-reach { opacity: .3; cursor: default; }
   .lock.is-pickable .hole { cursor: pointer; }
   .lock.is-pickable .hole:hover { box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 0 0 2px var(--verdigris); }
   .hole:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
@@ -620,7 +655,9 @@
       color: var(--text-dim);
     }
     .thumb-bar .tb-text b { color: var(--text); }
-    .thumb-bar button { flex: 0 0 auto; font-weight: 600; }
+    .thumb-bar .tb-buttons { display: flex; gap: 6px; flex: 0 0 auto; }
+    .thumb-bar button { flex: 0 0 auto; font-weight: 600; padding: 10px 12px; }
+    .thumb-bar #tbAction { font-weight: 700; }
     .wrap { padding-bottom: calc(96px + env(safe-area-inset-bottom)); }
     .theme-toggle { top: calc(10px + env(safe-area-inset-top)); }
   }
@@ -643,6 +680,11 @@
     <p class="lede">Powiedz mi, gdzie teraz stoją zapadki. Policzę najkrótszą sekwencję ruchów, w której żadna z nich nie uderzy o krawędź — czyli bez wyginania wytrycha.</p>
     <p class="byline">solver zamków · by <a href="https://github.com/jareq7/gothic-remake-lockpick-solver" target="_blank" rel="noopener">jareq7</a></p>
   </header>
+
+  <nav class="phases-row" aria-label="Fazy">
+    <div class="phases" id="phases"></div>
+    <button class="help-toggle" id="helpToggle" type="button">Ukryj opisy</button>
+  </nav>
 
   <div class="layout">
   <main class="col">
@@ -685,9 +727,9 @@
     <h2>Ile płytek ma zamek?</h2>
     <div class="row" id="plateCount"></div>
 
-    <p><b>Płytka 1 to ta najbliższa — na dole.</b> To ta, na której stoi kursor zaraz po otwarciu zamka i po każdym resecie. Kolejne numery idą w górę: płytka 2 to jedno naciśnięcie <b>góra</b>. Dzięki temu numeracja pokrywa się z tym, jak gra sama przeskakuje między płytkami — i po pęknięciu wytrycha zawsze wracasz na jedynkę.</p>
-    <p class="plain">Teraz kliknij na obrazku wyżej, gdzie <b>w tej chwili</b> siedzi zapadka każdej płytki — ten brązowy bolec. Wskazujesz obecny stan zamka, nie cel.</p>
-    <p>Celu nie musisz nigdzie zaznaczać: dla każdej płytki jest nim zawsze środkowy, 4. otwór — u mnie oznaczony pomarańczową przerywaną obwódką. A zapadka, która w grze wyskoczyła do góry i świeci na czerwono, <b>już siedzi w tym środkowym otworze</b> — czerwony kolor to potwierdzenie, że jest gotowa, a nie wskazówka, gdzie ma trafić. Dla takiej płytki po prostu kliknij środek.</p>
+    <p class="help"><b>Płytka 1 to ta najbliższa — na dole.</b> To ta, na której stoi kursor zaraz po otwarciu zamka i po każdym resecie. Kolejne numery idą w górę: płytka 2 to jedno naciśnięcie <b>góra</b>. Dzięki temu numeracja pokrywa się z tym, jak gra sama przeskakuje między płytkami — i po pęknięciu wytrycha zawsze wracasz na jedynkę.</p>
+    <p class="help plain">Teraz kliknij na obrazku wyżej, gdzie <b>w tej chwili</b> siedzi zapadka każdej płytki — ten brązowy bolec. Wskazujesz obecny stan zamka, nie cel.</p>
+    <p class="help">Celu nie musisz nigdzie zaznaczać: dla każdej płytki jest nim zawsze środkowy, 4. otwór — u mnie oznaczony pomarańczową przerywaną obwódką. A zapadka, która w grze wyskoczyła do góry i świeci na czerwono, <b>już siedzi w tym środkowym otworze</b> — czerwony kolor to potwierdzenie, że jest gotowa, a nie wskazówka, gdzie ma trafić. Dla takiej płytki po prostu kliknij środek.</p>
     <p class="banner good hidden" id="knownBanner"></p>
     <p class="banner hidden" id="matchBanner"></p>
     <div class="row">
@@ -701,19 +743,20 @@
   <section class="card hidden" id="cardProbe">
     <span class="step-tag" id="probeTag">Krok 2 — rozpoznanie</span>
     <h2 id="probeTitle">Płytka 1: przesuń <span class="keycap">→</span> raz</h2>
-    <p>Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.</p>
-    <p class="plain"><b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka</b> — wszystkie po kolei, także te, które Twoim zdaniem nie drgnęły. Nie zgaduj z pamięci, patrz na ekran gry.</p>
-    <p><b>Punktem odniesienia jest stan sprzed tego jednego ruchu — nie krok 0.</b> Zamek kumuluje ruchy próbne: kiedy ruszasz płytkę 2, stoi tam, gdzie zostawiła go płytka 1. Blade zapadki w podglądzie pokazują właśnie to: gdzie każda stała przed chwilą. Ty klikasz, gdzie siedzi teraz — a różnicę wyliczam sam.</p>
-    <p class="banner">Ruch próbny naprawdę rusza zamkiem — tak ma być. <b>Na koniec poproszę o Reset</b>, więc zamek wróci do układu z kroku 1 i rozpoznanie nic Cię nie kosztuje.</p>
+    <p class="help">Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.</p>
+    <p class="help plain"><b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka</b> — wszystkie po kolei, także te, które Twoim zdaniem nie drgnęły. Nie zgaduj z pamięci, patrz na ekran gry.</p>
+    <p class="help"><b>Punktem odniesienia jest stan sprzed tego jednego ruchu — nie krok 0.</b> Zamek kumuluje ruchy próbne: kiedy ruszasz płytkę 2, stoi tam, gdzie zostawiła go płytka 1. Blade zapadki w podglądzie pokazują właśnie to: gdzie każda stała przed chwilą. Ty klikasz, gdzie siedzi teraz — a różnicę wyliczam sam.</p>
+    <p class="help banner">Ruch próbny naprawdę rusza zamkiem — tak ma być. <b>Na koniec poproszę o Reset</b>, więc zamek wróci do układu z kroku 1 i rozpoznanie nic Cię nie kosztuje.</p>
 
     <p class="banner hidden" id="freeNote"></p>
     <p class="banner good" id="probeCount">Odczytane: 0 z 5 zapadek</p>
     <p class="banner bad hidden" id="probeError"></p>
 
     <div class="row">
+      <button id="probeRest">Reszta bez zmian</button>
       <button class="primary" id="probeConfirm">Odczytane — dalej</button>
-      <button class="danger" id="probeJam">Zgrzyt — ruch nie przeszedł</button>
-      <button class="ghost" id="probeSkip">Nie da się ruszyć w żadną stronę — pomiń tę płytkę</button>
+      <button class="danger" id="probeJam">Zgrzyt</button>
+      <button class="ghost" id="probeSkip">Zablokowana — pomiń</button>
     </div>
   </section>
 
@@ -756,7 +799,7 @@
     </div>
     <p class="banner good hidden" id="saveMsg"></p>
 
-    <p>Zapadka stoi gdzie indziej niż w podglądzie? <b>Kliknij właściwy otwór wprost na zamku wyżej</b> — przeliczę sekwencję od nowa, bez cofania się i bez utraty powiązań.</p>
+    <p class="help">Zapadka stoi gdzie indziej niż w podglądzie? <b>Kliknij właściwy otwór wprost na zamku wyżej</b> — przeliczę sekwencję od nowa, bez cofania się i bez utraty powiązań.</p>
     <div class="row">
       <button class="ghost" id="reReadState">Zmień liczbę płytek</button>
     </div>
@@ -772,7 +815,7 @@
     <span class="lib-head">Zapisane skrzynie</span>
     <div class="saved-list" id="savedList"></div>
     <p class="lib-empty hidden" id="libNote"></p>
-    <p class="lib-empty hidden" id="libEmpty">Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję bez wpisywania czegokolwiek.</p>
+    <p class="help lib-empty hidden" id="libEmpty">Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję bez wpisywania czegokolwiek.</p>
   </aside>
   </div>
 
@@ -784,7 +827,11 @@
 
 <div class="thumb-bar" id="thumbBar" role="region" aria-label="Bieżące zadanie">
   <span class="tb-text" id="tbText"></span>
-  <button class="primary" id="tbAction" type="button">Dalej</button>
+  <div class="tb-buttons">
+    <button id="tbAlt" type="button" class="hidden">Reszta</button>
+    <button id="tbAlt2" type="button" class="hidden">Zgrzyt</button>
+    <button class="primary" id="tbAction" type="button">Dalej</button>
+  </div>
 </div>
 
 <script>
@@ -804,6 +851,7 @@
     probeDir: 1,           // which way we are asking you to push the plate under test
     probePrev: [],         // pin layout before the current probe move
     probeRead: [],         // which pins you have re-read since that move
+    probeTried: false,     // have we already bounced off one direction on this plate?
     deferred: [],          // plates that are jammed solid right now — come back to them
     progressed: false,     // has the lock moved since we last gave up on the jammed plates?
     freeMove: null,        // a safe move on a known plate, to unjam the rest
@@ -816,6 +864,7 @@
     loadedName: "",        // name of the saved chest currently in play, if any
     justLoaded: false,     // loaded straight from the library, pins not re-checked yet
     grindFixes: null,      // a recommended move ground in game: the model must be wrong
+    showHelp: true,        // the long explanations: gold the first time, noise the twentieth
     probeEndPos: [],       // where the probe moves left the lock, if you would rather not reset
     needsReset: false,     // we assumed you pressed Reset in game and are solving from the start
     match: null            // saved chest whose starting layout matches what you typed
@@ -830,6 +879,7 @@
 
   var LOCKS_KEY = "wytrych-locks-v1";
   var SESSION_KEY = "wytrych-session-v1";
+  var HELP_KEY = "wytrych-help-v1";
 
   function readJSON(key) {
     try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
@@ -1108,9 +1158,23 @@
           pin.className = "pin" + (unread ? " unread" : "");
           b.appendChild(pin);
         }
-        (function (pi, ph) {
-          b.addEventListener("click", function () { setPin(pi, ph); });
-        })(i, h);
+        // One move shifts a pin by at most one hole, so during discovery only three holes
+        // are physically reachable. Killing the other four makes the target bigger and an
+        // impossible reading simply unclickable.
+        var reachable = true;
+        if (S.stage === "probe" && !S.probeRead[i]) {
+          reachable = Math.abs(h - S.probePrev[i]) <= 1;
+        } else if (S.stage === "probe") {
+          reachable = Math.abs(h - S.probePrev[i]) <= 1;
+        }
+        if (S.stage === "probe" && !reachable) {
+          b.disabled = true;
+          b.className += " out-of-reach";
+        } else {
+          (function (pi, ph) {
+            b.addEventListener("click", function () { setPin(pi, ph); });
+          })(i, h);
+        }
         holes.appendChild(b);
       }
       row.appendChild(holes);
@@ -1223,6 +1287,24 @@
     render();
   }
 
+  // Which way does a RIGHT press move a plate's own pin? Physically the same for every
+  // plate, so one probed plate tells us for all of them. 0 = we do not know yet.
+  function selfDir() {
+    for (var i = 0; i < S.n; i++) {
+      if (S.E[i]) { return S.E[i][i]; }
+    }
+    return 0;
+  }
+
+  // Can plate p be pushed this way without driving ITS OWN pin off an edge? Coupled pins may
+  // still block it — that is what the jam button is for — but this much we can see coming.
+  function selfSafe(p, dir) {
+    var sd = selfDir();
+    if (sd === 0) { return true; }              // unknown convention: cannot rule anything out
+    var np = S.pos[p] + dir * sd;
+    return np >= 0 && np <= HOLES - 1;
+  }
+
   function knownPlates() {
     var k = 0;
     for (var i = 0; i < S.n; i++) { if (S.E[i]) { k++; } }
@@ -1231,15 +1313,24 @@
 
   // Pick the next plate to work on, or set up a freeing move, or finish.
   function nextPlate() {
-    var i;
+    var i, best = -1, bestScore = -1;
+
     for (i = 0; i < S.n; i++) {
-      if (!S.E[i] && !S.deferred[i]) {
-        S.probeIdx = i;
-        S.probeDir = 1;
-        S.freeMove = null;
-        beginProbeRound();
-        return;
-      }
+      if (S.E[i] || S.deferred[i]) { continue; }
+      // Prefer a plate that can actually move. Before we know the convention, prefer one whose
+      // pin sits away from the edges — that is the plate least likely to jam either way.
+      var score = Math.min(S.pos[i], HOLES - 1 - S.pos[i]);
+      if (selfDir() !== 0 && !selfSafe(i, 1) && !selfSafe(i, -1)) { score = -0.5; }
+      if (score > bestScore) { bestScore = score; best = i; }
+    }
+
+    if (best >= 0) {
+      S.probeIdx = best;
+      // Push it the way its own pin can actually go.
+      S.probeDir = selfSafe(best, 1) ? 1 : -1;
+      S.freeMove = null;
+      beginProbeRound();
+      return;
     }
     if (knownPlates() === S.n) { finishProbe(); return; }
 
@@ -1282,6 +1373,7 @@
   }
 
   function beginProbeRound() {
+    S.probeTried = false;
     S.probePrev = S.pos.slice();
     S.probeRead = [];
     for (var i = 0; i < S.n; i++) { S.probeRead.push(false); }
@@ -1291,6 +1383,19 @@
   function readPin(plate, hole) {
     S.pos[plate] = hole;
     S.probeRead[plate] = true;
+    render();
+  }
+
+  // You clicked the pins that moved; this says the others are where they were. It is an
+  // explicit statement, not a pre-filled default — that distinction is the whole reason the
+  // old form was dangerous.
+  function restUnchanged() {
+    for (var i = 0; i < S.n; i++) {
+      if (!S.probeRead[i]) {
+        S.pos[i] = S.probePrev[i];
+        S.probeRead[i] = true;
+      }
+    }
     render();
   }
 
@@ -1331,10 +1436,11 @@
 
     var done = readCount();
     $("probeCount").innerHTML = done === S.n
-      ? "Wszystkie " + S.n + " zapadek odczytane. Możesz iść dalej."
-      : "Odczytane: <b>" + done + " z " + S.n + "</b>. Kliknij na zamku wyżej otwór każdej " +
-        "zapadki, której jeszcze nie potwierdziłeś — te blade to właśnie one.";
+      ? "Wszystkie " + S.n + " zapadek potwierdzone. Możesz iść dalej."
+      : "Kliknij na zamku <b>te zapadki, które drgnęły</b> (blade = jeszcze niepotwierdzone), " +
+        "a potem „Reszta bez zmian”. Potwierdzone: <b>" + done + " z " + S.n + "</b>.";
     $("probeConfirm").disabled = (done !== S.n);
+    $("probeRest").disabled = (done === S.n);
   }
 
   function confirmProbe() {
@@ -1400,17 +1506,20 @@
       err.classList.remove("hidden");
       return;
     }
-    if (S.probeDir === -1) {
+    var other = -S.probeDir;
+    if (S.probeTried || !selfSafe(S.probeIdx, other)) {
       err.innerHTML = "Obie strony zgrzytają — ta płytka jest w tym układzie zablokowana. " +
         "Pomiń ją: inne ruchy przesuną zamek i wrócimy do niej, gdy będzie miała miejsce.";
       err.classList.remove("hidden");
       return;
     }
-    S.probeDir = -1;
+    S.probeTried = true;
+    S.probeDir = other;
     S.pos = S.probePrev.slice();          // nothing moved
     beginProbeRound();
     err.innerHTML = "Jasne — ten ruch wypchnąłby którąś zapadkę poza krawędź. " +
-      "Przesuń tę samą płytkę <b>w lewo (←)</b> i odczytaj zamek.";
+      "Przesuń tę samą płytkę <b>" + (S.probeDir === 1 ? "w prawo (→)" : "w lewo (←)") +
+      "</b> i odczytaj zamek.";
     err.classList.remove("hidden");
     render();
   }
@@ -2040,6 +2149,34 @@
     solveAndRender();
   }
 
+  var PHASES = [
+    { key: "setup", label: "Ustawienie" },
+    { key: "probe", label: "Nauka" },
+    { key: "solve", label: "Rozwiązanie" }
+  ];
+
+  function renderPhases() {
+    var now = 0, i;
+    for (i = 0; i < PHASES.length; i++) { if (PHASES[i].key === S.stage) { now = i; } }
+
+    var host = $("phases");
+    host.innerHTML = "";
+    for (i = 0; i < PHASES.length; i++) {
+      var chip = document.createElement("span");
+      chip.className = "phase" + (i === now ? " is-now" : (i < now ? " is-done" : ""));
+      var num = document.createElement("b");
+      num.textContent = String(i + 1);
+      chip.appendChild(num);
+      var lab = document.createElement("span");
+      lab.textContent = " " + PHASES[i].label;
+      chip.appendChild(lab);
+      host.appendChild(chip);
+    }
+
+    $("helpToggle").textContent = S.showHelp ? "Ukryj opisy" : "Pokaż opisy";
+    if (document.body) { document.body.classList.toggle("hide-help", !S.showHelp); }
+  }
+
   /* ---------------- the thumb bar ----------------
      On a phone the lock lives at the top of the screen and the step card scrolls below it.
      This bar mirrors the single thing you must do right now, and its button drives the very
@@ -2047,6 +2184,9 @@
 
   function renderThumbBar() {
     var text = $("tbText"), act = $("tbAction");
+    var alt = $("tbAlt"), alt2 = $("tbAlt2");
+    alt.classList.add("hidden");
+    alt2.classList.add("hidden");
 
     if (S.stage === "setup") {
       var left = S.n - placedCount();
@@ -2064,7 +2204,13 @@
       var dir = free ? free.dir : S.probeDir;
       var read = readCount();
       text.innerHTML = "<b>Płytka " + (plate + 1) + " " + (dir === 1 ? "→ w prawo" : "← w lewo") +
-        "</b> · odczytane " + read + "/" + S.n;
+        "</b> · " + read + "/" + S.n;
+      alt.textContent = "Reszta";
+      alt.disabled = (read === S.n);
+      alt.classList.remove("hidden");
+      alt2.textContent = "Zgrzyt";
+      alt2.className = "danger";
+      alt2.classList.remove("hidden");
       act.textContent = "Dalej";
       act.disabled = (read !== S.n);
       return;
@@ -2087,8 +2233,25 @@
     text.innerHTML = "<b>Płytka " + (run.plate + 1) + " " +
       (run.dir === 1 ? "→ w prawo" : "← w lewo") + " ×" + run.count + "</b>" +
       (S.needsReset ? " · najpierw Reset w grze" : "");
+    alt.textContent = "Cofnij";
+    alt.disabled = (S.runIdx === 0);
+    alt.className = "";
+    alt.classList.remove("hidden");
+    alt2.textContent = "Zgrzyt";
+    alt2.className = "danger";
+    alt2.classList.remove("hidden");
     act.textContent = "Zrobione";
     act.disabled = false;
+  }
+
+  function thumbAlt() {
+    if (S.stage === "probe") { restUnchanged(); return; }
+    if (S.stage === "solve") { stepBack(); }
+  }
+
+  function thumbAlt2() {
+    if (S.stage === "probe") { jamProbe(); return; }
+    if (S.stage === "solve") { $("grind").click(); }
   }
 
   function thumbAction() {
@@ -2100,6 +2263,7 @@
   /* ---------------- master render ---------------- */
 
   function render() {
+    renderPhases();
     renderPlates();
     renderSaved();
     renderLinks();
@@ -2140,7 +2304,14 @@
     S.startPos = S.pos.slice();
     startProbe();
   });
+  $("helpToggle").addEventListener("click", function () {
+    S.showHelp = !S.showHelp;
+    writeJSON(HELP_KEY, S.showHelp);
+    render();
+  });
   $("tbAction").addEventListener("click", thumbAction);
+  $("tbAlt").addEventListener("click", thumbAlt);
+  $("tbAlt2").addEventListener("click", thumbAlt2);
   $("resetToStart").addEventListener("click", resetToStart);
   $("noReset").addEventListener("click", function () {
     if (validPins(S.probeEndPos, S.n)) { S.pos = S.probeEndPos.slice(); }
@@ -2150,6 +2321,7 @@
   $("probeConfirm").addEventListener("click", confirmProbe);
   $("probeJam").addEventListener("click", jamProbe);
   $("probeSkip").addEventListener("click", skipPlate);
+  $("probeRest").addEventListener("click", restUnchanged);
   $("stepDone").addEventListener("click", stepDone);
   $("stepBack").addEventListener("click", stepBack);
   $("grind").addEventListener("click", function () {
@@ -2200,6 +2372,8 @@
     setPlateCount(S.n);
   });
 
+  var savedHelp = readJSON(HELP_KEY);
+  S.showHelp = (savedHelp === null ? true : !!savedHelp);
   S.locks = migrateLocks(readJSON(LOCKS_KEY) || []);
   if (!restoreSession()) { setPlateCount(5); }
 })();

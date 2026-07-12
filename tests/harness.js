@@ -11,7 +11,9 @@ class El {
   set innerHTML(v){this.children=[];this._t=String(v);} get innerHTML(){return this._t;}
   set textContent(v){this._t=String(v);} get textContent(){return this._t;}
   set className(v){this.classes=new Set(String(v).split(/\s+/).filter(Boolean));}
+  get className(){return [...this.classes].join(" ");}
   addEventListener(t,f){(this.listeners[t]||=[]).push(f);} setAttribute(k,v){this.attrs[k]=v;}
+  getAttribute(k){return this.attrs[k];}
   appendChild(c){this.children.push(c);return c;} focus(){}
   click(){(this.listeners.click||[]).forEach(f=>f({}));}
   get text(){return this._t || this.children.map(c=>c.text).join(" ");}
@@ -20,7 +22,8 @@ class El {
 function boot(store = {}) {
   const byId = new Map();
   const document = { getElementById: id => { if(!byId.has(id)) byId.set(id, new El("div")); return byId.get(id); },
-                     createElement: t => new El(t), documentElement: new El("html") };
+                     createElement: t => new El(t), documentElement: new El("html"),
+                     body: new El("body") };
   const localStorage = { getItem: k => k in store ? store[k] : null, setItem: (k,v) => { store[k] = String(v); } };
   const ctx = { document, localStorage, console, JSON, Math, Array, Int32Array, Int8Array, String, Number, Object };
   vm.createContext(ctx); vm.runInContext(APP, ctx);
@@ -44,13 +47,16 @@ function discover(byId, C, misread) {
   const lock = C.pins.slice();
   const legal = (p,d) => lock.every((v,j)=>{ const np = v + d*C.E[p][j]; return np>=0 && np<=6; });
   const apply = (p,d) => { for (let j=0;j<C.n;j++) lock[j] += d*C.E[p][j]; };
-  const readBack = (round) => {
+  // Read the lock the way a player now does: click only the pins that actually moved,
+  // then press "Reszta bez zmian" for the ones that stayed put.
+  const readBack = (round, prev) => {
     for (let j=0;j<C.n;j++){
       let hole = lock[j];
       if (misread && misread.round === round && misread.plate === j)
         hole = Math.min(6, Math.max(0, hole + misread.delta));
-      holesFor(byId,j)[hole].click();
+      if (hole !== prev[j]) holesFor(byId,j)[hole].click();
     }
+    if (!byId.get("probeRest").disabled) byId.get("probeRest").click();
   };
 
   for (let guard=0; guard<200; guard++){
@@ -62,13 +68,14 @@ function discover(byId, C, misread) {
 
     if (!legal(plate, dir)) {
       byId.get("probeJam").click();
-      // still asking for the same plate? then the other way is jammed too — skip it
       const t2 = byId.get("probeTitle").innerHTML;
       const d2 = t2.includes("→") ? 1 : -1;
       if (d2 === dir || !legal(plate, d2)) { byId.get("probeSkip").click(); continue; }
-      apply(plate, d2); readBack(guard); byId.get("probeConfirm").click(); continue;
+      const prev2 = lock.slice();
+      apply(plate, d2); readBack(guard, prev2); byId.get("probeConfirm").click(); continue;
     }
-    apply(plate, dir); readBack(guard); byId.get("probeConfirm").click();
+    const prev = lock.slice();
+    apply(plate, dir); readBack(guard, prev); byId.get("probeConfirm").click();
   }
   return false;
 }

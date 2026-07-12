@@ -71,17 +71,21 @@ check("przycisk wciąż zablokowany", byId.get("probeConfirm").disabled === true
 holesFor(byId,1)[2].click(); holesFor(byId,2)[2].click(); holesFor(byId,3)[3].click();
 check("po odczytaniu wszystkich można iść dalej", byId.get("probeConfirm").disabled === false);
 
-// ============ 3. an impossible reading is refused ============
+// ============ 3. an impossible reading is now UNCLICKABLE ============
+// A move shifts a pin by at most one hole, so only three holes can be right. The other four
+// are dead: you cannot even report the impossible any more, let alone have it rejected.
 ({ byId } = boot());
 btn(byId,"plateCount","4").click();
-for(let i=0;i<4;i++) holesFor(byId,i)[2].click();
+for (let i=0;i<4;i++) holesFor(byId,i)[2].click();      // every pin in hole 3
 byId.get("toProbe").click();
-holesFor(byId,0)[5].click();                    // three holes in one move
-for(let j=1;j<4;j++) holesFor(byId,j)[2].click();
-byId.get("probeConfirm").click();
-check("zapadka nie może przeskoczyć kilku otworów jednym ruchem",
-      !hidden(byId,"probeError") && byId.get("probeError").innerHTML.includes("przeskoczyć"),
-      byId.get("probeError").innerHTML);
+
+const live = [0,1,2,3,4,5,6].filter(h => !holesFor(byId,0)[h].disabled);
+check("żywe są tylko trzy osiągalne otwory (o jeden w lewo, ten sam, o jeden w prawo)",
+      JSON.stringify(live) === JSON.stringify([1,2,3]), JSON.stringify(live));
+check("otwór trzy pola dalej jest martwy", holesFor(byId,0)[5].disabled === true);
+
+holesFor(byId,0)[5].click();                            // clicking it must do nothing at all
+check("kliknięcie w martwy otwór nic nie zmienia", pinOf(byId,0) === 2, String(pinOf(byId,0)));
 
 console.log(fails===0 ? "\nWSZYSTKO PRZESZŁO" : `\n${fails} BŁĘDÓW`);
 process.exit(fails?1:0);
