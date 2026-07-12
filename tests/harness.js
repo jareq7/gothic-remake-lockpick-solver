@@ -14,18 +14,27 @@ class El {
   get className(){return [...this.classes].join(" ");}
   addEventListener(t,f){(this.listeners[t]||=[]).push(f);} setAttribute(k,v){this.attrs[k]=v;}
   getAttribute(k){return this.attrs[k];}
-  appendChild(c){this.children.push(c);return c;} focus(){}
+  appendChild(c){this.children.push(c);return c;} focus(){} select(){}
   click(){(this.listeners.click||[]).forEach(f=>f({}));}
   get text(){return this._t || this.children.map(c=>c.text).join(" ");}
 }
 
+// Every id that exists in index.html, so byId.get(x) never returns undefined just because
+// the app has not touched that element yet.
+const ALL_IDS = [...HTML.matchAll(/id="([^"]+)"/g)].map(m => m[1]);
+
 function boot(store = {}) {
   const byId = new Map();
+  for (const id of ALL_IDS) byId.set(id, new El("div"));
   const document = { getElementById: id => { if(!byId.has(id)) byId.set(id, new El("div")); return byId.get(id); },
                      createElement: t => new El(t), documentElement: new El("html"),
                      body: new El("body") };
   const localStorage = { getItem: k => k in store ? store[k] : null, setItem: (k,v) => { store[k] = String(v); } };
-  const ctx = { document, localStorage, console, JSON, Math, Array, Int32Array, Int8Array, String, Number, Object };
+  // Safari exposes navigator.clipboard only over https; simulate the hostile case (absent),
+  // so the export path must still work by selecting the text.
+  const navigator = {};
+  const ctx = { document, localStorage, navigator, console, JSON, Math, Array,
+                Int32Array, Int8Array, String, Number, Object, Promise };
   vm.createContext(ctx); vm.runInContext(APP, ctx);
   return { byId, store };
 }

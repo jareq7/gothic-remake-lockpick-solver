@@ -126,6 +126,22 @@
   }
   .lib-empty { font-size: 13px; color: var(--text-dim); margin: 0; }
 
+  .transfer { border-top: 1px solid var(--line-soft); padding-top: 10px; }
+  .transfer textarea {
+    width: 100%;
+    margin: 8px 0;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 16px;              /* below 16px Safari zooms on focus */
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 8px 10px;
+    resize: vertical;
+  }
+  .transfer textarea:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+
   @media (max-width: 860px) {
     .layout { grid-template-columns: 1fr; }
     .library { position: static; }
@@ -811,6 +827,17 @@
     <span class="lib-head">Zapisane skrzynie</span>
     <div class="saved-list" id="savedList"></div>
     <p class="lib-empty hidden" id="libNote"></p>
+    <details class="transfer" id="transferBox">
+      <summary>Przenieś / kopia zapasowa</summary>
+      <p class="help">Skrzynie żyją w pamięci przeglądarki, osobno dla każdego adresu — te z pliku na dysku nie pojawią się same na telefonie. Wyeksportuj je tutaj, skopiuj tekst i wklej po drugiej stronie.</p>
+      <textarea id="transferText" rows="4" placeholder="Tu pojawi się kod skrzyń po eksporcie. Albo wklej tu kod, żeby je zaimportować." aria-label="Kod skrzyń"></textarea>
+      <div class="row">
+        <button id="doExport">Eksportuj</button>
+        <button id="doImport">Importuj</button>
+      </div>
+      <p class="banner good hidden" id="transferMsg"></p>
+    </details>
+
     <p class="help lib-empty hidden" id="libEmpty">Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję bez wpisywania czegokolwiek.</p>
   </aside>
   </div>
@@ -1005,6 +1032,96 @@
   function deleteLock(idx) {
     S.locks.splice(idx, 1);
     writeJSON(LOCKS_KEY, S.locks);
+    render();
+  }
+
+  /* ---------------- moving the library between browsers ----------------
+     localStorage is per-origin: chests saved from a file on disk are invisible to the same
+     page served over https, and vice versa. So the library needs a door. */
+
+  function validLock(L) {
+    if (!L || typeof L.name !== "string" || !L.name.trim()) { return false; }
+    if (typeof L.n !== "number" || L.n < MIN_PLATES || L.n > MAX_PLATES) { return false; }
+    if (!Array.isArray(L.E) || L.E.length !== L.n) { return false; }
+    for (var i = 0; i < L.n; i++) {
+      if (!Array.isArray(L.E[i]) || L.E[i].length !== L.n) { return false; }
+      for (var j = 0; j < L.n; j++) {
+        var v = L.E[i][j];
+        if (v !== -1 && v !== 0 && v !== 1) { return false; }
+      }
+      if (L.E[i][i] === 0) { return false; }       // a plate always moves its own pin
+    }
+    if (L.pos !== null && L.pos !== undefined && !validPins(L.pos, L.n)) { return false; }
+    return true;
+  }
+
+  function exportLocks() {
+    var msg = $("transferMsg");
+    if (!S.locks.length) {
+      msg.textContent = "Nie ma czego eksportować — biblioteka jest pusta.";
+      msg.classList.remove("hidden");
+      return;
+    }
+    var payload = { wytrych: 1, locks: S.locks };
+    var text = JSON.stringify(payload);
+    $("transferText").value = text;
+    $("transferText").select();
+
+    var n = S.locks.length;
+    msg.textContent = "Wyeksportowano " + n + " " +
+      plural(n, "skrzynię", "skrzynie", "skrzyń") + ". Skopiuj ten tekst i wklej po drugiej stronie.";
+    msg.classList.remove("hidden");
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(function () {
+        msg.textContent = "Skopiowane do schowka (" + n + " " +
+          plural(n, "skrzynia", "skrzynie", "skrzyń") + "). Wklej po drugiej stronie.";
+      }, function () { /* clipboard blocked: the text is selected anyway */ });
+    }
+  }
+
+  function importLocks() {
+    var msg = $("transferMsg");
+    var raw = $("transferText").value.trim();
+    if (!raw) {
+      msg.textContent = "Wklej najpierw kod skrzyń w pole wyżej.";
+      msg.classList.remove("hidden");
+      return;
+    }
+
+    var data;
+    try { data = JSON.parse(raw); } catch (e) { data = null; }
+    var incoming = data && Array.isArray(data.locks) ? data.locks
+                 : (Array.isArray(data) ? data : null);
+    if (!incoming) {
+      msg.textContent = "To nie wygląda na kod skrzyń. Wklej dokładnie to, co dał eksport.";
+      msg.classList.remove("hidden");
+      return;
+    }
+
+    var added = 0, updated = 0, skipped = 0;
+    for (var k = 0; k < incoming.length; k++) {
+      var L = incoming[k];
+      if (!validLock(L)) { skipped++; continue; }
+      var entry = {
+        name: L.name.trim(), n: L.n,
+        E: L.E.map(function (row) { return row.slice(); }),
+        pos: validPins(L.pos, L.n) ? L.pos.slice() : null
+      };
+      var at = -1;
+      for (var i = 0; i < S.locks.length; i++) {
+        if (S.locks[i].name.toLowerCase() === entry.name.toLowerCase()) { at = i; }
+      }
+      if (at >= 0) { S.locks[at] = entry; updated++; } else { S.locks.push(entry); added++; }
+    }
+
+    writeJSON(LOCKS_KEY, S.locks);
+    var parts = [];
+    if (added) { parts.push("dodano " + added); }
+    if (updated) { parts.push("nadpisano " + updated); }
+    if (skipped) { parts.push("odrzucono " + skipped + " (uszkodzone)"); }
+    msg.textContent = parts.length ? parts.join(", ") + "." : "Nic nowego — te skrzynie już masz.";
+    msg.classList.remove("hidden");
     render();
   }
 
@@ -2288,6 +2405,8 @@
     S.startPos = S.pos.slice();
     startProbe();
   });
+  $("doExport").addEventListener("click", exportLocks);
+  $("doImport").addEventListener("click", importLocks);
   $("helpToggle").addEventListener("click", function () {
     S.showHelp = !S.showHelp;
     writeJSON(HELP_KEY, S.showHelp);
