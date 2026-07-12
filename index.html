@@ -677,7 +677,7 @@
   <header class="masthead">
     <span class="eyebrow">Gothic 1 Remake</span>
     <h1>Solver zamków</h1>
-    <p class="lede">Policzę najkrótszą sekwencję ruchów, w której żadna zapadka nie uderzy o krawędź — czyli bez wyginania wytrycha.</p>
+    <p class="lede">Powiedz mi, gdzie teraz stoją zapadki.</p>
     <p class="byline">by <a href="https://github.com/jareq7/gothic-remake-lockpick-solver" target="_blank" rel="noopener">jareq7</a></p>
   </header>
 
@@ -692,7 +692,6 @@
   <!-- ============ LOCK ============ -->
   <section class="lock" id="lock" aria-label="Podgląd zamka">
     <div class="lock-head">
-      <span id="lockHint">Ustaw zapadki</span>
       <span>środek = 4. otwór</span>
     </div>
     <div id="plates"></div>
@@ -701,15 +700,14 @@
       <span><strong id="doneCount">0</strong>/<span id="totalCount">0</span> na środku</span>
     </div>
     <div class="lock-actions">
-      <button id="resetToStart" class="hidden">↺ Wróć do pozycji startowej</button>
+      <button id="resetToStart" class="hidden">↺ Reset</button>
       <span class="at-start hidden" id="atStart">Krok 0 — pozycja startowa</span>
     </div>
   </section>
 
   <!-- ============ LINKS: always on screen, whatever step you are on ============ -->
   <section class="card hidden" id="cardLinks">
-    <span class="step-tag">Powiązania tej skrzyni</span>
-    <h2>Co ciągnie co</h2>
+    <h2>Powiązania</h2>
     <p class="banner bad hidden" id="asymWarn"></p>
     <div class="link-list" id="linkList"></div>
     <details id="matrixBox">
@@ -723,7 +721,6 @@
 
   <!-- ============ STEP 1: SETUP ============ -->
   <section class="card" id="cardSetup">
-    <span class="step-tag">Krok 1 — zamek</span>
     <h2>Ile płytek ma zamek?</h2>
     <div class="row" id="plateCount"></div>
 
@@ -733,15 +730,15 @@
     <p class="banner good hidden" id="knownBanner"></p>
     <p class="banner hidden" id="matchBanner"></p>
     <div class="row">
-      <button class="primary hidden" id="loadMatch">Wczytaj powiązania z pamięci</button>
-      <button class="primary" id="toProbe">Zapadki ustawione →</button>
-      <button class="ghost hidden" id="reProbe">Rozpoznaj powiązania od nowa</button>
+      <button class="primary hidden" id="loadMatch">Wczytaj z pamięci</button>
+      <button class="primary" id="toProbe">Dalej →</button>
+      <button class="ghost hidden" id="reProbe">Poznaj od nowa</button>
     </div>
   </section>
 
   <!-- ============ STEP 2: PROBE ============ -->
   <section class="card hidden" id="cardProbe">
-    <span class="step-tag" id="probeTag">Krok 2 — rozpoznanie</span>
+    <span class="step-tag" id="probeTag"></span>
     <h2 id="probeTitle">Płytka 1: przesuń <span class="keycap">→</span> raz</h2>
     <p class="help">Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.</p>
     <p class="help plain"><b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka</b> — wszystkie po kolei, także te, które Twoim zdaniem nie drgnęły. Nie zgaduj z pamięci, patrz na ekran gry.</p>
@@ -762,7 +759,6 @@
 
   <!-- ============ STEP 3: SOLUTION ============ -->
   <section class="card hidden" id="cardSolve">
-    <span class="step-tag" id="solveTag">Krok 3 — otwieranie</span>
     <h2 id="solveTitle">Sekwencja</h2>
     <p class="banner good hidden" id="solveOk"></p>
     <p class="banner bad hidden" id="solveBad"></p>
@@ -770,9 +766,9 @@
     <p class="banner hidden" id="loadedNote"></p>
 
     <div class="hidden" id="resetNote">
-      <p class="banner"><b>Wciśnij teraz Reset w grze</b> — klawisz <span class="keycap">R</span> na klawiaturze albo <span class="keycap">Y</span> na padzie. Ruchy próbne rozjechały zamek, a Reset cofa go do układu, który wpisałeś w kroku 1. Od niego policzyłem sekwencję. Reset nic nie kosztuje.</p>
+      <p class="banner"><b>Wciśnij Reset w grze</b> (<span class="keycap">R</span> / <span class="keycap">Y</span>) — zamek wróci do układu startowego, a od niego liczę sekwencję. Nic nie kosztuje.</p>
       <div class="row">
-        <button class="ghost" id="noReset">Nie resetowałem — licz od stanu po ruchach próbnych</button>
+        <button class="ghost" id="noReset">Nie resetowałem</button>
       </div>
     </div>
 
@@ -786,7 +782,7 @@
     <div class="row">
       <button class="primary" id="stepDone">Zrobione — dalej</button>
       <button class="ghost" id="stepBack">Cofnij</button>
-      <button class="danger" id="grind">Zgrzyt — ten ruch nie przechodzi</button>
+      <button class="danger" id="grind">Zgrzyt</button>
     </div>
 
     <div id="upcomingBox">
@@ -795,7 +791,7 @@
     </div>
     <div class="save-row">
       <input id="lockName" type="text" maxlength="40" placeholder="Nazwa skrzyni, np. skrzynia u Diego" aria-label="Nazwa skrzyni">
-      <button id="saveLock">Zapisz tę skrzynię</button>
+      <button id="saveLock">Zapisz</button>
     </div>
     <p class="banner good hidden" id="saveMsg"></p>
 
@@ -1078,7 +1074,7 @@
     var known = linksKnown();
     var banner = $("knownBanner");
     var placed = validPins(S.pos, S.n);
-    $("toProbe").textContent = known ? "Policz sekwencję →" : "Zapadki ustawione →";
+    $("toProbe").textContent = known ? "Policz →" : "Dalej →";
     $("toProbe").disabled = !placed;
     $("reProbe").classList.toggle("hidden", !known);
 
@@ -1183,17 +1179,12 @@
     for (var k = 0; k < S.n; k++) { if (S.pos[k] === TARGET) done++; }
     $("doneCount").textContent = done;
     $("totalCount").textContent = S.n;
-    $("lockHint").textContent = S.stage === "setup" ? "Ustaw zapadki" :
-                                S.stage === "probe" ? "Rozpoznanie" : "Otwieranie";
     $("lockStatus").textContent =
       done === S.n ? "Zamek otwarty." :
       S.stage === "setup"
-        ? (placedCount() === S.n
-            ? "Wszystkie zapadki ustawione."
-            : "Kliknij otwór, w którym zapadka siedzi TERAZ — zostało " + (S.n - placedCount()) + " z " + S.n + ".") :
-      S.stage === "probe" ? "Odczytaj zamek: kliknij otwór każdej zapadki." :
-      (S.runIdx === 0 ? "Pozycja wyjściowa — stąd liczę sekwencję." :
-        "Po " + S.runIdx + " " + plStep(S.runIdx) + " sekwencji.");
+        ? (placedCount() === S.n ? "" : "Zostało " + (S.n - placedCount()) + " z " + S.n + " zapadek.") :
+      S.stage === "probe" ? "" :
+      (S.runIdx === 0 ? "" : "Po " + S.runIdx + " " + plStep(S.runIdx) + ".");
   }
 
   function setPin(plate, hole) {
@@ -1409,11 +1400,11 @@
     if (free) {
       arrow = free.dir === 1 ? "→" : "←";
       word = free.dir === 1 ? "w prawo" : "w lewo";
-      $("probeTag").textContent = "Krok 2 — rozpoznanie · ruch uwalniający";
+      $("probeTag").textContent = "Ruch uwalniający";
       $("probeTitle").innerHTML = "Płytka " + (free.plate + 1) + ": przesuń <span class=\"keycap\">" +
         arrow + "</span> (" + word + ") raz";
     } else {
-      $("probeTag").textContent = "Krok 2 — rozpoznanie · poznane " + knownPlates() + " z " + S.n;
+      $("probeTag").textContent = "Poznane " + knownPlates() + " z " + S.n;
       $("probeTitle").innerHTML = "Płytka " + (S.probeIdx + 1) + ": przesuń <span class=\"keycap\">" +
         arrow + "</span> (" + word + ") raz";
     }
@@ -1735,7 +1726,7 @@
     $("solveTitle").textContent = "Krok " + (S.runIdx + 1) + " z " + total;
 
     $("nowPlate").textContent = "Płytka " + (run.plate + 1);
-    $("nowWhere").textContent = "Podświetliłem ją w podglądzie zamka wyżej.";
+    $("nowWhere").textContent = "";
 
     // The count is shown as literal keycaps, so "x4" can't be misread.
     var keys = $("nowKeys");
@@ -1779,8 +1770,7 @@
       list.classList.add("hidden");
     } else {
       list.classList.remove("hidden");
-      $("upcomingHead").textContent = "Potem, w tej kolejności — jeszcze " +
-        pressesLeft + " " + plPress(pressesLeft);
+      $("upcomingHead").textContent = "Dalej — jeszcze " + pressesLeft + " " + plPress(pressesLeft);
     }
 
     $("stepDone").disabled = false;
@@ -2124,9 +2114,7 @@
     tag.classList.toggle("hidden", !(usable && atStart()));
     tag.textContent = "Krok 0 — pozycja startowa";
 
-    b.textContent = (S.stage === "probe")
-      ? "↺ Reset — zacznij rozpoznanie od nowa"
-      : "↺ Wróć do pozycji startowej (krok 0)";
+    b.textContent = (S.stage === "probe") ? "↺ Zacznij naukę od nowa" : "↺ Wróć do kroku 0";
   }
 
   function resetToStart() {
