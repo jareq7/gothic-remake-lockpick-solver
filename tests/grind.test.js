@@ -98,7 +98,7 @@ b3.get("savedList").children[0].children[0].click();
 b3.get("stepDone").click();
 b3.get("grind").click();
 check("zgrzyt zgłoszony po kilku ruchach: aplikacja NIE zgaduje, tylko każe wrócić do kroku 0",
-      b3.get("solveBad").innerHTML.includes("Wróć do pozycji startowej") && hidden(b3,"fixList"),
+      b3.get("solveBad").innerHTML.includes("Wróć do kroku 0") && hidden(b3,"fixList"),
       b3.get("solveBad").innerHTML);
 
 console.log(fails===0 ? "\nWSZYSTKO PRZESZŁO" : `\n${fails} BŁĘDÓW`);

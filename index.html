@@ -217,6 +217,12 @@
   }
   .phase.is-now b { opacity: 1; }
   .phase.is-done { color: var(--verdigris); border-color: var(--verdigris); }
+  .lang-toggle {
+    margin-left: 0;
+    font-weight: 700;
+    letter-spacing: .06em;
+    border-color: var(--line);
+  }
   .help-toggle {
     margin-left: auto;
     font-size: 12px;
@@ -691,15 +697,16 @@
 <div class="wrap">
 
   <header class="masthead">
-    <span class="eyebrow">Gothic 1 Remake</span>
-    <h1>Solver zamków</h1>
-    <p class="lede">Powiedz mi, gdzie teraz stoją zapadki.</p>
+    <span class="eyebrow" data-i18n="eyebrow">Gothic 1 Remake</span>
+    <h1 data-i18n="title">Solver zamków</h1>
+    <p class="lede" data-i18n="lede">Powiedz mi, gdzie teraz stoją zapadki.</p>
     <p class="byline">by <a href="https://github.com/jareq7/gothic-remake-lockpick-solver" target="_blank" rel="noopener">jareq7</a></p>
   </header>
 
   <nav class="phases-row" aria-label="Fazy">
     <div class="phases" id="phases"></div>
     <button class="help-toggle" id="helpToggle" type="button">Ukryj opisy</button>
+    <button class="help-toggle lang-toggle" id="langToggle" type="button">EN</button>
   </nav>
 
   <div class="layout">
@@ -708,7 +715,7 @@
   <!-- ============ LOCK ============ -->
   <section class="lock" id="lock" aria-label="Podgląd zamka">
     <div class="lock-head">
-      <span>środek = 4. otwór</span>
+      <span data-i18n="centerHole">środek = 4. otwór</span>
     </div>
     <div id="plates"></div>
     <div class="lock-foot">
@@ -723,32 +730,32 @@
 
   <!-- ============ LINKS: always on screen, whatever step you are on ============ -->
   <section class="card hidden" id="cardLinks">
-    <h2>Powiązania</h2>
+    <h2 data-i18n="linksTitle">Powiązania</h2>
     <p class="banner bad hidden" id="asymWarn"></p>
     <div class="link-list" id="linkList"></div>
     <details id="matrixBox">
-      <summary>Tabela do korekty</summary>
+      <summary data-i18n="matrixSummary">Tabela do korekty</summary>
       <div class="matrix-scroll">
         <table class="matrix" id="matrix"></table>
       </div>
-      <p style="margin-top:10px">Wiersz = płytka, którą przesuwasz w <b>prawo</b>. Kolumna = zapadka, która się przez to rusza. Kliknij komórkę, żeby ją zmienić.</p>
+      <p style="margin-top:10px" data-i18n-html="matrixHelp">Wiersz = płytka, którą przesuwasz w <b>prawo</b>. Kolumna = zapadka, która się przez to rusza. Kliknij komórkę, żeby ją zmienić.</p>
     </details>
   </section>
 
   <!-- ============ STEP 1: SETUP ============ -->
   <section class="card" id="cardSetup">
-    <h2>Ile płytek ma zamek?</h2>
+    <h2 data-i18n="plateCountQ">Ile płytek ma zamek?</h2>
     <div class="row" id="plateCount"></div>
 
-    <p class="help"><b>Płytka 1 to ta najbliższa — na dole.</b> To ta, na której stoi kursor zaraz po otwarciu zamka i po każdym resecie. Kolejne numery idą w górę: płytka 2 to jedno naciśnięcie <b>góra</b>. Dzięki temu numeracja pokrywa się z tym, jak gra sama przeskakuje między płytkami — i po pęknięciu wytrycha zawsze wracasz na jedynkę.</p>
-    <p class="help plain">Teraz kliknij na obrazku wyżej, gdzie <b>w tej chwili</b> siedzi zapadka każdej płytki — ten brązowy bolec. Wskazujesz obecny stan zamka, nie cel.</p>
-    <p class="help">Celu nie musisz nigdzie zaznaczać: dla każdej płytki jest nim zawsze środkowy, 4. otwór — u mnie oznaczony pomarańczową przerywaną obwódką. A zapadka, która w grze wyskoczyła do góry i świeci na czerwono, <b>już siedzi w tym środkowym otworze</b> — czerwony kolor to potwierdzenie, że jest gotowa, a nie wskazówka, gdzie ma trafić. Dla takiej płytki po prostu kliknij środek.</p>
+    <p class="help" data-i18n-html="numbering"><b>Płytka 1 to ta najbliższa — na dole.</b> To ta, na której stoi kursor zaraz po otwarciu zamka i po każdym resecie. Kolejne numery idą w górę: płytka 2 to jedno naciśnięcie <b>góra</b>. Dzięki temu numeracja pokrywa się z tym, jak gra sama przeskakuje między płytkami — i po pęknięciu wytrycha zawsze wracasz na jedynkę.</p>
+    <p class="help plain" data-i18n-html="setupHelp1">Teraz kliknij na obrazku wyżej, gdzie <b>w tej chwili</b> siedzi zapadka każdej płytki — ten brązowy bolec. Wskazujesz obecny stan zamka, nie cel.</p>
+    <p class="help" data-i18n-html="setupHelp2">Celu nie musisz nigdzie zaznaczać: dla każdej płytki jest nim zawsze środkowy, 4. otwór — u mnie oznaczony pomarańczową przerywaną obwódką. A zapadka, która w grze wyskoczyła do góry i świeci na czerwono, <b>już siedzi w tym środkowym otworze</b> — czerwony kolor to potwierdzenie, że jest gotowa, a nie wskazówka, gdzie ma trafić. Dla takiej płytki po prostu kliknij środek.</p>
     <p class="banner good hidden" id="knownBanner"></p>
     <p class="banner hidden" id="matchBanner"></p>
     <div class="row">
       <button class="primary hidden" id="loadMatch">Wczytaj z pamięci</button>
       <button class="primary" id="toProbe">Dalej →</button>
-      <button class="ghost hidden" id="reProbe">Poznaj od nowa</button>
+      <button class="ghost hidden" id="reProbe" data-i18n="reProbe">Poznaj od nowa</button>
     </div>
   </section>
 
@@ -756,20 +763,20 @@
   <section class="card hidden" id="cardProbe">
     <span class="step-tag" id="probeTag"></span>
     <h2 id="probeTitle">Płytka 1: przesuń <span class="keycap">→</span> raz</h2>
-    <p class="help">Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.</p>
-    <p class="help plain"><b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka</b> — wszystkie po kolei, także te, które Twoim zdaniem nie drgnęły. Nie zgaduj z pamięci, patrz na ekran gry.</p>
-    <p class="help"><b>Punktem odniesienia jest stan sprzed tego jednego ruchu — nie krok 0.</b> Zamek kumuluje ruchy próbne: kiedy ruszasz płytkę 2, stoi tam, gdzie zostawiła go płytka 1. Blade zapadki w podglądzie pokazują właśnie to: gdzie każda stała przed chwilą. Ty klikasz, gdzie siedzi teraz — a różnicę wyliczam sam.</p>
-    <p class="help banner">Ruch próbny naprawdę rusza zamkiem — tak ma być. <b>Na koniec poproszę o Reset</b>, więc zamek wróci do układu z kroku 1 i rozpoznanie nic Cię nie kosztuje.</p>
+    <p class="help" data-i18n-html="probeHelp1">Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.</p>
+    <p class="help plain" data-i18n-html="probeHelp2"><b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka</b> — wszystkie po kolei, także te, które Twoim zdaniem nie drgnęły. Nie zgaduj z pamięci, patrz na ekran gry.</p>
+    <p class="help" data-i18n-html="probeHelp3"><b>Punktem odniesienia jest stan sprzed tego jednego ruchu — nie krok 0.</b> Zamek kumuluje ruchy próbne: kiedy ruszasz płytkę 2, stoi tam, gdzie zostawiła go płytka 1. Blade zapadki w podglądzie pokazują właśnie to: gdzie każda stała przed chwilą. Ty klikasz, gdzie siedzi teraz — a różnicę wyliczam sam.</p>
+    <p class="help banner" data-i18n-html="probeHelp4">Ruch próbny naprawdę rusza zamkiem — tak ma być. <b>Na koniec poproszę o Reset</b>, więc zamek wróci do układu z kroku 1 i rozpoznanie nic Cię nie kosztuje.</p>
 
     <p class="banner hidden" id="freeNote"></p>
     <p class="banner good" id="probeCount">Odczytane: 0 z 5 zapadek</p>
     <p class="banner bad hidden" id="probeError"></p>
 
     <div class="row">
-      <button id="probeRest">Reszta bez zmian</button>
-      <button class="primary" id="probeConfirm">Odczytane — dalej</button>
-      <button class="danger" id="probeJam">Zgrzyt</button>
-      <button class="ghost" id="probeSkip">Zablokowana — pomiń</button>
+      <button id="probeRest" data-i18n="probeRest">Reszta bez zmian</button>
+      <button class="primary" id="probeConfirm" data-i18n="probeConfirm">Odczytane — dalej</button>
+      <button class="danger" id="probeJam" data-i18n="grind">Zgrzyt</button>
+      <button class="ghost" id="probeSkip" data-i18n="probeSkip">Zablokowana — pomiń</button>
     </div>
   </section>
 
@@ -782,9 +789,9 @@
     <p class="banner hidden" id="loadedNote"></p>
 
     <div class="hidden" id="resetNote">
-      <p class="banner"><b>Wciśnij Reset w grze</b> (<span class="keycap">R</span> / <span class="keycap">Y</span>) — zamek wróci do układu startowego, a od niego liczę sekwencję. Nic nie kosztuje.</p>
+      <p class="banner" data-i18n-html="resetNote"><b>Wciśnij Reset w grze</b> (<span class="keycap">R</span> / <span class="keycap">Y</span>) — zamek wróci do układu startowego, a od niego liczę sekwencję. Nic nie kosztuje.</p>
       <div class="row">
-        <button class="ghost" id="noReset">Nie resetowałem</button>
+        <button class="ghost" id="noReset" data-i18n="noReset">Nie resetowałem</button>
       </div>
     </div>
 
@@ -796,9 +803,9 @@
     </div>
 
     <div class="row">
-      <button class="primary" id="stepDone">Zrobione — dalej</button>
-      <button class="ghost" id="stepBack">Cofnij</button>
-      <button class="danger" id="grind">Zgrzyt</button>
+      <button class="primary" id="stepDone" data-i18n="stepDone">Zrobione — dalej</button>
+      <button class="ghost" id="stepBack" data-i18n="stepBack">Cofnij</button>
+      <button class="danger" id="grind" data-i18n="grind">Zgrzyt</button>
     </div>
 
     <div id="upcomingBox">
@@ -806,39 +813,39 @@
       <ol class="moves" id="moves"></ol>
     </div>
     <div class="save-row">
-      <input id="lockName" type="text" maxlength="40" placeholder="Nazwa skrzyni, np. skrzynia u Diego" aria-label="Nazwa skrzyni">
-      <button id="saveLock">Zapisz</button>
+      <input id="lockName" type="text" maxlength="40" placeholder="Nazwa skrzyni, np. skrzynia u Diego" data-i18n-ph="namePlaceholder" aria-label="Nazwa skrzyni">
+      <button id="saveLock" data-i18n="save">Zapisz</button>
     </div>
     <p class="banner good hidden" id="saveMsg"></p>
 
-    <p class="help">Zapadka stoi gdzie indziej niż w podglądzie? <b>Kliknij właściwy otwór wprost na zamku wyżej</b> — przeliczę sekwencję od nowa, bez cofania się i bez utraty powiązań.</p>
+    <p class="help" data-i18n-html="solveHelp">Zapadka stoi gdzie indziej niż w podglądzie? <b>Kliknij właściwy otwór wprost na zamku wyżej</b> — przeliczę sekwencję od nowa, bez cofania się i bez utraty powiązań.</p>
     <div class="row">
-      <button class="ghost" id="reReadState">Zmień liczbę płytek</button>
+      <button class="ghost" id="reReadState" data-i18n="changeCount">Zmień liczbę płytek</button>
     </div>
   </section>
 
   <div class="row">
-    <button class="ghost" id="reset">Nowy zamek</button>
+    <button class="ghost" id="reset" data-i18n="newLock">Nowy zamek</button>
   </div>
 
   </main>
 
   <aside class="library" aria-label="Zapisane skrzynie">
-    <span class="lib-head">Zapisane skrzynie</span>
+    <span class="lib-head" data-i18n="libHead">Zapisane skrzynie</span>
     <div class="saved-list" id="savedList"></div>
     <p class="lib-empty hidden" id="libNote"></p>
     <details class="transfer hidden" id="transferBox">
-      <summary>Przenieś / kopia zapasowa</summary>
-      <p class="help">Skrzynie żyją w pamięci przeglądarki, osobno dla każdego adresu — te z pliku na dysku nie pojawią się same na telefonie. Wyeksportuj je tutaj, skopiuj tekst i wklej po drugiej stronie.</p>
-      <textarea id="transferText" rows="4" placeholder="Tu pojawi się kod skrzyń po eksporcie. Albo wklej tu kod, żeby je zaimportować." aria-label="Kod skrzyń"></textarea>
+      <summary data-i18n="transferSummary">Przenieś / kopia zapasowa</summary>
+      <p class="help" data-i18n-html="transferHelp">Skrzynie żyją w pamięci przeglądarki, osobno dla każdego adresu — te z pliku na dysku nie pojawią się same na telefonie. Wyeksportuj je tutaj, skopiuj tekst i wklej po drugiej stronie.</p>
+      <textarea id="transferText" rows="4" placeholder="…" data-i18n-ph="transferPlaceholder" aria-label="Kod skrzyń"></textarea>
       <div class="row">
-        <button id="doExport">Eksportuj</button>
-        <button id="doImport">Importuj</button>
+        <button id="doExport" data-i18n="export">Eksportuj</button>
+        <button id="doImport" data-i18n="import">Importuj</button>
       </div>
       <p class="banner good hidden" id="transferMsg"></p>
     </details>
 
-    <p class="help lib-empty hidden" id="libEmpty">Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję bez wpisywania czegokolwiek.</p>
+    <p class="help lib-empty hidden" id="libEmpty" data-i18n-html="libEmpty">Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję bez wpisywania czegokolwiek.</p>
   </aside>
   </div>
 
@@ -883,6 +890,7 @@
     loadedName: "",        // name of the saved chest currently in play, if any
     justLoaded: false,     // loaded straight from the library, pins not re-checked yet
     grindFixes: null,      // a recommended move ground in game: the model must be wrong
+    lang: "pl",            // interface language
     showHelp: true,        // the long explanations: gold the first time, noise the twentieth
     probeEndPos: [],       // where the probe moves left the lock, if you would rather not reset
     needsReset: false,     // we assumed you pressed Reset in game and are solving from the start
@@ -890,6 +898,285 @@
   };
 
   var $ = function (id) { return document.getElementById(id); };
+
+
+  /* ---------------- language ----------------
+     Source strings live here, not scattered through the code, so a message can never exist
+     in one language only. t() interpolates {name} placeholders. */
+
+  var LANG_KEY = "wytrych-lang-v1";
+
+  var STR = {
+    pl: {
+      lang: "pl",
+      eyebrow: "Gothic 1 Remake",
+      title: "Solver zamków",
+      lede: "Powiedz mi, gdzie teraz stoją zapadki.",
+      centerHole: "środek = 4. otwór",
+      linksTitle: "Powiązania",
+      matrixSummary: "Tabela do korekty",
+      plateCountQ: "Ile płytek ma zamek?",
+      libHead: "Zapisane skrzynie",
+      transferSummary: "Przenieś / kopia zapasowa",
+      export: "Eksportuj", import: "Importuj",
+      save: "Zapisz", newLock: "Nowy zamek", changeCount: "Zmień liczbę płytek",
+      reProbe: "Poznaj od nowa", probeConfirm: "Odczytane — dalej", probeRest: "Reszta bez zmian",
+      probeSkip: "Zablokowana — pomiń", grind: "Zgrzyt", noReset: "Nie resetowałem",
+      stepDone: "Zrobione — dalej", stepBack: "Cofnij",
+      phases: ["Ustawienie", "Nauka", "Rozwiązanie"],
+      hideHelp: "Ukryj opisy", showHelp: "Pokaż opisy",
+      next: "Dalej", calc: "Policz →", go: "Dalej →", done: "Gotowe", doneBtn: "Zrobione",
+      rest: "Reszta", back: "Cofnij", loadFromMemory: "Wczytaj z pamięci",
+      atStart: "Krok 0 — pozycja startowa",
+      resetToStart: "↺ Wróć do kroku 0", restartProbe: "↺ Zacznij naukę od nowa",
+      lockOpen: "Zamek otwarty.", opened: "Otwarte", seqTitle: "Sekwencja",
+      pinsLeft: "Zostało {left} z {n} zapadek.",
+      afterSteps: "Po {n} {word}.",
+      learned: "Poznane {k} z {n}",
+      freeMoveTag: "Ruch uwalniający",
+      probeTitle: "Płytka {p}: przesuń {key} ({word}) raz",
+      probeCountDone: "Wszystkie {n} zapadek potwierdzone. Możesz iść dalej.",
+      probeCount: "Kliknij na zamku <b>te zapadki, które drgnęły</b> (blade = jeszcze niepotwierdzone), a potem „Reszta bez zmian”. Potwierdzone: <b>{done} z {n}</b>.",
+      stepOf: "Krok {i} z {n}",
+      plate: "Płytka {p}",
+      pushTimes: "Przesuń <b>{word}</b> {n} {times}, potem kliknij „Zrobione”.",
+      upcoming: "Dalej — jeszcze {n} {word}",
+      lastStep: "To ostatni krok.",
+      right: "w prawo", left: "w lewo", once: "raz", times: "razy",
+      noPath: "Coś się nie zgadza",
+      tbPlace: "Kliknij na zamku otwór każdej zapadki — <b>zostało {left}</b>.",
+      tbPlaced: "<b>Zapadki ustawione.</b>",
+      tbKnown: "Powiązania już znam.",
+      tbLearn: "Teraz nauka.",
+      tbProbe: "<b>Płytka {p} {arrow} {word}</b> · {done}/{n}",
+      tbStep: "<b>Płytka {p} {arrow} {word} ×{c}</b>",
+      tbReset: " · najpierw Reset w grze",
+      tbOpen: "<b>Zamek otwarty.</b>",
+      tbBad: "<b>Coś się nie zgadza</b> · sprawdź tropy niżej",
+      libEmptyShort: "Pusto.",
+      delChest: "Usuń zapisaną skrzynię {name}",
+      allCentred: "Wszystkie zapadki na środku — zamek stoi otworem.",
+      plates: "{n} płytek", ready: " · gotowa", noPins: " · bez zapadek",
+      numbering: "<b>Płytka 1 to ta najbliższa — na dole.</b> To ta, na której stoi kursor zaraz po otwarciu zamka i po każdym resecie. Kolejne numery idą w górę: płytka 2 to jedno naciśnięcie <b>góra</b>. Dzięki temu numeracja pokrywa się z tym, jak gra sama przeskakuje między płytkami — i po pęknięciu wytrycha zawsze wracasz na jedynkę.",
+      setupHelp1: "Teraz kliknij na obrazku wyżej, gdzie <b>w tej chwili</b> siedzi zapadka każdej płytki — ten brązowy bolec. Wskazujesz obecny stan zamka, nie cel.",
+      setupHelp2: "Celu nie musisz nigdzie zaznaczać: dla każdej płytki jest nim zawsze środkowy, 4. otwór. A zapadka, która w grze wyskoczyła do góry i świeci na czerwono, <b>już siedzi w tym środkowym otworze</b> — czerwony kolor to potwierdzenie, że jest gotowa, a nie wskazówka, gdzie ma trafić.",
+      probeHelp1: "Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.",
+      probeHelp2: "<b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka.</b> Nie zgaduj z pamięci, patrz na ekran gry.",
+      probeHelp3: "<b>Punktem odniesienia jest stan sprzed tego jednego ruchu — nie krok 0.</b> Zamek kumuluje ruchy próbne: kiedy ruszasz płytkę 2, stoi tam, gdzie zostawiła go płytka 1. Blade zapadki pokazują, gdzie każda stała przed chwilą.",
+      probeHelp4: "Ruch próbny naprawdę rusza zamkiem — tak ma być. <b>Na koniec poproszę o Reset</b>, więc zamek wróci do układu z kroku 1 i nauka nic Cię nie kosztuje.",
+      solveHelp: "Zapadka stoi gdzie indziej niż w podglądzie? <b>Kliknij właściwy otwór wprost na zamku wyżej</b> — przeliczę sekwencję od nowa, bez utraty powiązań.",
+      matrixHelp: "Wiersz = płytka, którą przesuwasz w <b>prawo</b>. Kolumna = zapadka, która się przez to rusza. Kliknij komórkę, żeby ją zmienić.",
+      resetNote: "<b>Wciśnij Reset w grze</b> (<span class=\"keycap\">R</span> / <span class=\"keycap\">Y</span>) — zamek wróci do układu startowego, a od niego liczę sekwencję. Nic nie kosztuje.",
+      transferHelp: "Skrzynie żyją w pamięci przeglądarki, osobno dla każdego adresu. Wyeksportuj je tutaj, skopiuj tekst i wklej po drugiej stronie.",
+      libEmpty: "Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję.",
+      namePlaceholder: "Nazwa skrzyni, np. skrzynia u Diego",
+      transferPlaceholder: "Tu pojawi się kod skrzyń po eksporcie. Albo wklej tu kod, żeby je zaimportować.",
+      errJump: "Zapadka <b>{j}</b> nie mogła przeskoczyć {k} otworów jednym ruchem — jeden ruch to najwyżej jeden otwór. Odczytaj ją jeszcze raz.",
+      errMustMove: "Zapadka <b>{j}</b> należy do płytki, którą właśnie przesunąłeś — musiała się ruszyć. Jeśli w grze nic nie drgnęło i usłyszałeś zgrzyt, użyj przycisku „Zgrzyt”.",
+      errFreeMismatch: "To nie zgadza się z tym, co wiem o płytce <b>{p}</b>: zapadka <b>{j}</b> zachowała się inaczej, niż zapisałem. Sprawdź zamek jeszcze raz.",
+      errFreeGrind: "Ten ruch powinien być bezpieczny — jeśli zgrzytnął, to któreś powiązanie mam źle. Wciśnij Reset i zacznij naukę od nowa.",
+      errBothJam: "Obie strony zgrzytają — ta płytka jest w tym układzie zablokowana. Pomiń ją: inne ruchy przesuną zamek i wrócimy do niej.",
+      okOtherWay: "Jasne — ten ruch wypchnąłby którąś zapadkę poza krawędź. Przesuń tę samą płytkę <b>{word}</b> i odczytaj zamek.",
+      freeNote: "Pozostałe płytki są w tym układzie zablokowane. Płytkę {p} już znam, więc wiem, że ten ruch jest bezpieczny: odsunie zapadki od krawędzi. Zrób go i odczytaj zamek.",
+      knownBanner: "Powiązania już znam — nauki nie będzie. Wskaż tylko, gdzie teraz stoją zapadki.",
+      knownBannerNamed: "Powiązania skrzyni „{name}” już znam — nauki nie będzie. Wskaż tylko, gdzie teraz stoją zapadki.",
+      matchMirrored: "Ten układ pasuje do skrzyni „<b>{name}</b>”, ale <b>w odwrotnej kolejności</b>.",
+      loadedNote: "Wczytałem „{name}” — powiązania i ustawienie zapadek wziąłem z pamięci. Sprawdź podgląd: jeśli w grze zapadki stoją inaczej, popraw je kliknięciem.",
+      noPathBody: "Z tego układu nie ma drogi do środka bez uderzenia o krawędź — a prawdziwa skrzynia zawsze ją ma. Czyli jedna obserwacja się nie zgadza. <b>Nie poprawiaj tego na oko:</b> jeśli pomyłka siedzi w powiązaniu, samo przestawienie zapadki da sekwencję, która wygnie Ci wytrych.",
+      grindLate: "Zgrzyt znaczy, że któreś powiązanie zapisałem źle. Ale jesteś już {k} {word} od startu, a skoro powiązania kłamią, to i moje wyobrażenie o pozycji zapadek jest niepewne. <b>Wróć do kroku 0</b> i powtórz pierwszy ruch.",
+      grindFirst: "Zgrzyt na pierwszym kroku, z pozycji, którą oboje znamy na pewno. To twardy dowód: <b>któreś powiązanie zapisałem z odwrotnym znakiem</b>.",
+      grindNoFix: "Zgrzyt na pierwszym kroku, a <b>żadna pojedyncza poprawka tego nie tłumaczy</b> — w nauce jest więcej niż jedna pomyłka. Wciśnij Reset i zacznij od nowa.",
+      leadsOne: " Jedno wytłumaczenie pasuje — sprawdź je w grze:",
+      leadsMany: " Pasuje kilka wytłumaczeń — <b>sprawdź je w grze</b>, zaczynając od góry.",
+      headMisread: "Jedna obserwacja się nie zgadza.",
+      headGrind: "Ten ruch nie miał prawa przejść.",
+      fixLink: "Rusz w grze <b>płytkę {p}</b> i popatrz na <b>zapadkę {j}</b>. Jeśli ona <b>{to}</b> — a zaznaczyłeś, że {from} — to jest ta pomyłka.",
+      fixPin: "Sprawdź <b>zapadkę {i}</b> na ekranie gry. Jeśli siedzi w otworze <b>{to}</b>, a nie w {from}, to jest ta pomyłka.",
+      fixApply: "Zgadza się — popraw (zamek w {n} {word})",
+      mvRight: "poszła w prawo", mvLeft: "poszła w lewo", mvNone: "nie ruszyła się",
+      linkRow: "<b>Płytka {i}</b> — ruch <b>→</b> przesuwa jej zapadkę w {dir}. ",
+      linkSolo: "Nie rusza żadnej innej zapadki.",
+      linkPulls: "Ciągnie za sobą {list}.",
+      linkPin: "zapadkę <b>{j}</b> ",
+      linkSame: "w tę samą stronę", linkOpp: "w przeciwną",
+      asymWarn: "<b>Uwaga — {n} {word} tylko w jedną stronę:</b> {list}. W tej grze sprzężone płytki ciągną się <b>wzajemnie</b>, więc to zwykle znak przeoczonego odczytu. Sprawdź te pary w grze.",
+      asymPair: "płytka <b>{a}</b> rusza zapadkę <b>{b}</b>, ale nie odwrotnie",
+      saveNeedName: "Nadaj skrzyni nazwę, po której ją poznasz — np. „skrzynia u Diego”.",
+      saveOk: "Zapisane jako „{name}”. Następnym razem pominiesz naukę.",
+      saveUpdated: "Zaktualizowałem „{name}”. Następnym razem pominiesz naukę.",
+      libNote: "Przenumerowałem skrzynie zapisane pod starą numeracją. Sprawdź je przy pierwszym użyciu.",
+      exportEmpty: "Nie ma czego eksportować — biblioteka jest pusta.",
+      exportOk: "Wyeksportowano {n} {word}. Skopiuj tekst i wklej po drugiej stronie.",
+      exportCopied: "Skopiowane do schowka ({n} {word}). Wklej po drugiej stronie.",
+      importEmpty: "Wklej najpierw kod skrzyń w pole wyżej.",
+      importBad: "To nie wygląda na kod skrzyń. Wklej dokładnie to, co dał eksport.",
+      importNone: "Nic nowego — te skrzynie już masz.",
+      importAdded: "dodano {n}", importUpdated: "nadpisano {n}", importSkipped: "odrzucono {n} (uszkodzone)",
+      badge: { presses: ["naciśnięcie", "naciśnięcia", "naciśnięć"],
+               steps: ["krok", "kroki", "kroków"],
+               chests: ["skrzynię", "skrzynie", "skrzyń"],
+               links: ["powiązanie działa", "powiązania działają", "powiązań działa"] }
+    },
+    en: {
+      lang: "en",
+      eyebrow: "Gothic 1 Remake",
+      title: "Lockpick solver",
+      lede: "Tell me where the pins are sitting right now.",
+      centerHole: "centre = 4th hole",
+      linksTitle: "Links",
+      matrixSummary: "Correction table",
+      plateCountQ: "How many plates?",
+      libHead: "Saved chests",
+      transferSummary: "Move / back up",
+      export: "Export", import: "Import",
+      save: "Save", newLock: "New lock", changeCount: "Change plate count",
+      reProbe: "Learn again", probeConfirm: "Read — next", probeRest: "Rest unchanged",
+      probeSkip: "Jammed — skip", grind: "Grind", noReset: "Didn't reset",
+      stepDone: "Done — next", stepBack: "Undo",
+      phases: ["Setup", "Learn", "Solve"],
+      hideHelp: "Hide notes", showHelp: "Show notes",
+      next: "Next", calc: "Solve →", go: "Next →", done: "Done", doneBtn: "Done",
+      rest: "Rest", back: "Undo", loadFromMemory: "Load from memory",
+      atStart: "Step 0 — starting layout",
+      resetToStart: "↺ Back to step 0", restartProbe: "↺ Start learning over",
+      lockOpen: "Lock open.", opened: "Open", seqTitle: "Sequence",
+      pinsLeft: "{left} of {n} pins left to place.",
+      afterSteps: "After {n} {word}.",
+      learned: "Learned {k} of {n}",
+      freeMoveTag: "Freeing move",
+      probeTitle: "Plate {p}: push {key} ({word}) once",
+      probeCountDone: "All {n} pins confirmed. You can move on.",
+      probeCount: "Click <b>the pins that moved</b> on the lock (faded = not confirmed yet), then „Rest unchanged”. Confirmed: <b>{done} of {n}</b>.",
+      stepOf: "Step {i} of {n}",
+      plate: "Plate {p}",
+      pushTimes: "Push <b>{word}</b> {n} {times}, then click „Done”.",
+      upcoming: "Next — {n} more {word}",
+      lastStep: "This is the last step.",
+      right: "right", left: "left", once: "time", times: "times",
+      noPath: "Something is off",
+      tbPlace: "Click the hole of every pin on the lock — <b>{left} left</b>.",
+      tbPlaced: "<b>Pins placed.</b>",
+      tbKnown: "I already know the links.",
+      tbLearn: "Now the learning step.",
+      tbProbe: "<b>Plate {p} {arrow} {word}</b> · {done}/{n}",
+      tbStep: "<b>Plate {p} {arrow} {word} ×{c}</b>",
+      tbReset: " · press Reset in game first",
+      tbOpen: "<b>Lock open.</b>",
+      tbBad: "<b>Something is off</b> · check the leads below",
+      libEmptyShort: "Empty.",
+      delChest: "Delete saved chest {name}",
+      allCentred: "Every pin is centred — the lock stands open.",
+      plates: "{n} plates", ready: " · ready", noPins: " · no pins",
+      numbering: "<b>Plate 1 is the nearest one — at the bottom.</b> It is the plate the cursor lands on when the lock opens and after every reset. The numbers go up from there: plate 2 is one press of <b>up</b>. That way the numbering matches how the game itself steps between plates.",
+      setupHelp1: "Now click on the lock above, where each plate's pin <b>currently</b> sits — the bronze stud. You are reporting the lock's present state, not the goal.",
+      setupHelp2: "You never mark the goal: for every plate it is always the middle, 4th hole. A pin that has popped up and glows red in game <b>is already in that middle hole</b> — the red means it is done, not where it should go.",
+      probeHelp1: "In game you select a plate with <b>up/down</b> and push it <b>left/right</b>. The links are fixed for a chest, but I have to learn them — and I learn them from what the move did to the lock.",
+      probeHelp2: "<b>After the move, read the lock again: click the hole where each pin now sits.</b> Don't go from memory — look at the game.",
+      probeHelp3: "<b>The reference point is the state just before this one move — not step 0.</b> The lock accumulates the probe moves: when you push plate 2, it stands where plate 1 left it. Faded pins show where each one was a moment ago.",
+      probeHelp4: "A probe move really does move the lock — that is intended. <b>At the end I will ask you to Reset</b>, so the lock returns to the layout from step 1 and learning costs you nothing.",
+      solveHelp: "A pin sitting somewhere else than in the preview? <b>Click the right hole on the lock above</b> — I will recompute the sequence without losing the links.",
+      matrixHelp: "Row = the plate you push <b>right</b>. Column = the pin that moves because of it. Click a cell to change it.",
+      resetNote: "<b>Press Reset in game</b> (<span class=\"keycap\">R</span> / <span class=\"keycap\">Y</span>) — the lock returns to its starting layout, and that is what I solve from. It costs nothing.",
+      transferHelp: "Chests live in the browser's storage, separately for each address. Export them here, copy the text, and paste it on the other side.",
+      libEmpty: "Empty. You save a chest in step 3 — I remember its links <b>and its pin layout</b>, so next time you get a ready sequence.",
+      namePlaceholder: "Chest name, e.g. chest at Diego's",
+      transferPlaceholder: "The chest code appears here after export. Or paste a code here to import.",
+      errJump: "Pin <b>{j}</b> cannot have jumped {k} holes in one move — one move is at most one hole. Read it again.",
+      errMustMove: "Pin <b>{j}</b> belongs to the plate you just pushed — it had to move. If nothing budged in game and you heard a grind, use the „Grind” button.",
+      errFreeMismatch: "That does not match what I know about plate <b>{p}</b>: pin <b>{j}</b> behaved differently than recorded. Check the lock again.",
+      errFreeGrind: "This move should have been safe — if it ground, one of the links is wrong. Press Reset and start learning over.",
+      errBothJam: "Both directions grind — this plate is jammed in the current layout. Skip it: other moves will shift the lock and we will come back.",
+      okOtherWay: "Understood — that move would push a pin past an edge. Push the same plate <b>{word}</b> and read the lock.",
+      freeNote: "Every remaining plate is jammed. I already know plate {p}, so I know this move is safe: it pulls the pins away from the edges. Make it and read the lock.",
+      knownBanner: "I already know the links — no learning needed. Just show me where the pins are now.",
+      knownBannerNamed: "I already know the links of „{name}” — no learning needed. Just show me where the pins are now.",
+      matchMirrored: "This layout matches the chest „<b>{name}</b>”, but <b>in reverse order</b>.",
+      loadedNote: "Loaded „{name}” — links and pin layout came from memory. Check the preview: if the pins sit differently in game, fix them with a click.",
+      noPathBody: "From this layout there is no path to the centre without hitting an edge — and a real chest always has one. So one observation is wrong. <b>Do not fix it by eye:</b> if the mistake is in a link, moving a pin alone yields a sequence that will bend your pick.",
+      grindLate: "A grind means one of the links is recorded wrong. But you are already {k} {word} from the start, and if the links lie, so does my picture of where the pins are. <b>Go back to step 0</b> and repeat the first move.",
+      grindFirst: "A grind on the first step, from a position we both know for certain. That is hard evidence: <b>one link was recorded with the wrong sign</b>.",
+      grindNoFix: "A grind on the first step, and <b>no single correction explains it</b> — there is more than one mistake in the learning step. Press Reset and start over.",
+      leadsOne: " One explanation fits — check it in game:",
+      leadsMany: " Several explanations fit — <b>check them in game</b>, starting from the top.",
+      headMisread: "One observation does not add up.",
+      headGrind: "That move had no right to work.",
+      fixLink: "Push <b>plate {p}</b> in game and watch <b>pin {j}</b>. If it <b>{to}</b> — and you marked that it {from} — that is the mistake.",
+      fixPin: "Check <b>pin {i}</b> on screen. If it sits in hole <b>{to}</b> and not {from}, that is the mistake.",
+      fixApply: "That's it — fix (lock in {n} {word})",
+      mvRight: "went right", mvLeft: "went left", mvNone: "did not move",
+      linkRow: "<b>Plate {i}</b> — pushing <b>→</b> moves its pin {dir}. ",
+      linkSolo: "It moves no other pin.",
+      linkPulls: "It drags {list}.",
+      linkPin: "pin <b>{j}</b> ",
+      linkSame: "the same way", linkOpp: "the opposite way",
+      asymWarn: "<b>Careful — {n} {word} one way only:</b> {list}. In this game coupled plates pull each other <b>both ways</b>, so this usually means a missed reading. Check these pairs in game.",
+      asymPair: "plate <b>{a}</b> moves pin <b>{b}</b>, but not the other way round",
+      saveNeedName: "Give the chest a name you will recognise — e.g. „chest at Diego's”.",
+      saveOk: "Saved as „{name}”. Next time you skip the learning step.",
+      saveUpdated: "Updated „{name}”. Next time you skip the learning step.",
+      libNote: "I renumbered chests saved under the old numbering. Check them on first use.",
+      exportEmpty: "Nothing to export — the library is empty.",
+      exportOk: "Exported {n} {word}. Copy the text and paste it on the other side.",
+      exportCopied: "Copied to clipboard ({n} {word}). Paste it on the other side.",
+      importEmpty: "Paste a chest code into the field above first.",
+      importBad: "That does not look like a chest code. Paste exactly what the export gave you.",
+      importNone: "Nothing new — you already have these chests.",
+      importAdded: "added {n}", importUpdated: "overwrote {n}", importSkipped: "rejected {n} (corrupt)",
+      badge: { presses: ["press", "presses", "presses"],
+               steps: ["step", "steps", "steps"],
+               chests: ["chest", "chests", "chests"],
+               links: ["link works", "links work", "links work"] }
+    }
+  };
+
+  function t(key, vars) {
+    var dict = STR[S.lang] || STR.pl;
+    var out = dict[key];
+    if (out === undefined) { out = STR.pl[key]; }
+    if (typeof out !== "string") { return out; }
+    if (vars) {
+      out = out.replace(/\{(\w+)\}/g, function (_, k) {
+        return vars[k] === undefined ? "{" + k + "}" : vars[k];
+      });
+    }
+    return out;
+  }
+
+  // Polish needs three plural forms; English gets by with two. Both go through one gate.
+  function pl3(n, forms) {
+    if (S.lang !== "pl") { return n === 1 ? forms[0] : forms[1]; }
+    if (n === 1) { return forms[0]; }
+    var last = n % 10, tens = n % 100;
+    if (last >= 2 && last <= 4 && !(tens >= 12 && tens <= 14)) { return forms[1]; }
+    return forms[2];
+  }
+  function plPress(n) { return pl3(n, (STR[S.lang] || STR.pl).badge.presses); }
+  function plStep(n)  { return pl3(n, (STR[S.lang] || STR.pl).badge.steps); }
+
+  function applyStatic() {
+    if (!document.querySelectorAll) { return; }
+    var i, nodes;
+    nodes = document.querySelectorAll("[data-i18n]");
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].textContent = t(nodes[i].getAttribute("data-i18n"));
+    }
+    nodes = document.querySelectorAll("[data-i18n-html]");
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].innerHTML = t(nodes[i].getAttribute("data-i18n-html"));
+    }
+    nodes = document.querySelectorAll("[data-i18n-ph]");
+    for (i = 0; i < nodes.length; i++) {
+      nodes[i].placeholder = t(nodes[i].getAttribute("data-i18n-ph"));
+    }
+    if (document.documentElement) { document.documentElement.setAttribute("lang", S.lang); }
+  }
+
+  function setLang(lang) {
+    S.lang = (lang === "en") ? "en" : "pl";
+    writeJSON(LANG_KEY, S.lang);
+    applyStatic();
+    render();
+  }
 
   /* ---------------- persistence ----------------
      Two separate things get remembered, because they age differently:
@@ -1058,7 +1345,7 @@
   function exportLocks() {
     var msg = $("transferMsg");
     if (!S.locks.length) {
-      msg.textContent = "Nie ma czego eksportować — biblioteka jest pusta.";
+      msg.textContent = t("exportEmpty");
       msg.classList.remove("hidden");
       return;
     }
@@ -1068,14 +1355,13 @@
     $("transferText").select();
 
     var n = S.locks.length;
-    msg.textContent = "Wyeksportowano " + n + " " +
-      plural(n, "skrzynię", "skrzynie", "skrzyń") + ". Skopiuj ten tekst i wklej po drugiej stronie.";
+    var chest = function (k) { return pl3(k, (STR[S.lang] || STR.pl).badge.chests); };
+    msg.textContent = t("exportOk", { n: n, word: chest(n) });
     msg.classList.remove("hidden");
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(text).then(function () {
-        msg.textContent = "Skopiowane do schowka (" + n + " " +
-          plural(n, "skrzynia", "skrzynie", "skrzyń") + "). Wklej po drugiej stronie.";
+        msg.textContent = t("exportCopied", { n: n, word: chest(n) });
       }, function () { /* clipboard blocked: the text is selected anyway */ });
     }
   }
@@ -1084,7 +1370,7 @@
     var msg = $("transferMsg");
     var raw = $("transferText").value.trim();
     if (!raw) {
-      msg.textContent = "Wklej najpierw kod skrzyń w pole wyżej.";
+      msg.textContent = t("importEmpty");
       msg.classList.remove("hidden");
       return;
     }
@@ -1094,7 +1380,7 @@
     var incoming = data && Array.isArray(data.locks) ? data.locks
                  : (Array.isArray(data) ? data : null);
     if (!incoming) {
-      msg.textContent = "To nie wygląda na kod skrzyń. Wklej dokładnie to, co dał eksport.";
+      msg.textContent = t("importBad");
       msg.classList.remove("hidden");
       return;
     }
@@ -1117,10 +1403,10 @@
 
     writeJSON(LOCKS_KEY, S.locks);
     var parts = [];
-    if (added) { parts.push("dodano " + added); }
-    if (updated) { parts.push("nadpisano " + updated); }
-    if (skipped) { parts.push("odrzucono " + skipped + " (uszkodzone)"); }
-    msg.textContent = parts.length ? parts.join(", ") + "." : "Nic nowego — te skrzynie już masz.";
+    if (added) { parts.push(t("importAdded", { n: added })); }
+    if (updated) { parts.push(t("importUpdated", { n: updated })); }
+    if (skipped) { parts.push(t("importSkipped", { n: skipped })); }
+    msg.textContent = parts.length ? parts.join(", ") + "." : t("importNone");
     msg.classList.remove("hidden");
     render();
   }
@@ -1132,9 +1418,7 @@
     var moved = S.locks.filter(function (L) { return L.renumbered; });
     var note = $("libNote");
     if (moved.length) {
-      note.innerHTML = "Przenumerowałem " + (moved.length === 1 ? "skrzynię" : "skrzynie") +
-        " zapisane pod starą numeracją (jedynka była na górze). Sprawdź przy pierwszym użyciu — " +
-        "jeśli sekwencja nie zagra, usuń i nagraj od nowa.";
+      note.innerHTML = t("libNote");
       note.classList.remove("hidden");
     } else {
       note.classList.add("hidden");
@@ -1157,7 +1441,8 @@
 
       var meta = document.createElement("span");
       meta.className = "meta";
-      meta.textContent = lock.n + " płytek" + (validPins(lock.pos, lock.n) ? " · gotowa" : " · bez zapadek");
+      meta.textContent = t("plates", { n: lock.n }) +
+        (validPins(lock.pos, lock.n) ? t("ready") : t("noPins"));
       open.appendChild(meta);
 
       (function (idx) {
@@ -1169,7 +1454,7 @@
       del.type = "button";
       del.className = "del";
       del.textContent = "×";
-      del.setAttribute("aria-label", "Usuń zapisaną skrzynię " + lock.name);
+      del.setAttribute("aria-label", t("delChest", { name: lock.name }));
       (function (idx) {
         del.addEventListener("click", function () { deleteLock(idx); });
       })(i);
@@ -1191,14 +1476,14 @@
     var known = linksKnown();
     var banner = $("knownBanner");
     var placed = validPins(S.pos, S.n);
-    $("toProbe").textContent = known ? "Policz →" : "Dalej →";
+    $("toProbe").textContent = known ? t("calc") : t("go");
     $("toProbe").disabled = !placed;
     $("reProbe").classList.toggle("hidden", !known);
 
     if (known) {
       banner.textContent = S.loadedName
-        ? "Powiązania skrzyni „" + S.loadedName + "” już znam — rozpoznania nie będzie. Wskaż tylko, gdzie teraz stoją zapadki."
-        : "Powiązania tego zamka już znam — rozpoznania nie będzie. Wskaż tylko, gdzie teraz stoją zapadki.";
+        ? t("knownBannerNamed", { name: S.loadedName })
+        : t("knownBanner");
       banner.classList.remove("hidden");
     } else {
       banner.classList.add("hidden");
@@ -1215,11 +1500,11 @@
     }
     var name = S.locks[m.idx].name;
     if (m.mirrored) {
-      mb.innerHTML = "Ten układ zapadek pasuje do zapisanej skrzyni „<b>" + name + "</b>”, ale <b>w odwrotnej kolejności</b>. " +
-        "Najpewniej numerujesz teraz płytki z drugiej strony niż wtedy — przełącz „która płytka to numer 1” wyżej, a układ się zgra.";
+      mb.innerHTML = t("matchMirrored", { name: name });
       load.classList.add("hidden");
     } else {
-      mb.innerHTML = "To wygląda na zapisaną skrzynię „<b>" + name + "</b>” — układ zapadek zgadza się co do otworu. Mogę wziąć jej powiązania z pamięci i pominąć rozpoznanie.";
+      mb.innerHTML = "<b>" + name + "</b>";
+      load.textContent = t("loadFromMemory");
       load.classList.remove("hidden");
     }
     mb.classList.remove("hidden");
@@ -1297,11 +1582,11 @@
     $("doneCount").textContent = done;
     $("totalCount").textContent = S.n;
     $("lockStatus").textContent =
-      done === S.n ? "Zamek otwarty." :
+      done === S.n ? t("lockOpen") :
       S.stage === "setup"
-        ? (placedCount() === S.n ? "" : "Zostało " + (S.n - placedCount()) + " z " + S.n + " zapadek.") :
+        ? (placedCount() === S.n ? "" : t("pinsLeft", { left: S.n - placedCount(), n: S.n })) :
       S.stage === "probe" ? "" :
-      (S.runIdx === 0 ? "" : "Po " + S.runIdx + " " + plStep(S.runIdx) + ".");
+      (S.runIdx === 0 ? "" : t("afterSteps", { n: S.runIdx, word: plStep(S.runIdx) }));
   }
 
   function setPin(plate, hole) {
@@ -1510,39 +1795,31 @@
   }
 
   function renderProbe() {
-    var arrow = S.probeDir === 1 ? "→" : "←";
-    var word = S.probeDir === 1 ? "w prawo" : "w lewo";
+    var arrow, word;
     var free = S.freeMove;
 
-    if (free) {
-      arrow = free.dir === 1 ? "→" : "←";
-      word = free.dir === 1 ? "w prawo" : "w lewo";
-      $("probeTag").textContent = "Ruch uwalniający";
-      $("probeTitle").innerHTML = "Płytka " + (free.plate + 1) + ": przesuń <span class=\"keycap\">" +
-        arrow + "</span> (" + word + ") raz";
-    } else {
-      $("probeTag").textContent = "Poznane " + knownPlates() + " z " + S.n;
-      $("probeTitle").innerHTML = "Płytka " + (S.probeIdx + 1) + ": przesuń <span class=\"keycap\">" +
-        arrow + "</span> (" + word + ") raz";
-    }
+    var pIdx = free ? free.plate : S.probeIdx;
+    var pDir = free ? free.dir : S.probeDir;
+    arrow = pDir === 1 ? "→" : "←";
+    word = pDir === 1 ? t("right") : t("left");
+    $("probeTag").textContent = free ? t("freeMoveTag") : t("learned", { k: knownPlates(), n: S.n });
+    $("probeTitle").innerHTML = t("probeTitle", {
+      p: pIdx + 1, key: "<span class=\"keycap\">" + arrow + "</span>", word: word
+    });
 
     $("freeNote").classList.toggle("hidden", !free);
     if (free) {
-      $("freeNote").innerHTML = "Pozostałe płytki są w tym układzie zablokowane — żadna nie " +
-        "ruszy się ani w lewo, ani w prawo. Płytkę " + (free.plate + 1) + " już znam, więc wiem, " +
-        "że ten ruch jest bezpieczny: odsunie zapadki od krawędzi i zrobi im miejsce. " +
-        "Zrób go i odczytaj zamek — potem wrócimy do reszty.";
+      $("freeNote").innerHTML = t("freeNote", { p: free.plate + 1 });
     }
 
     var skip = $("probeSkip");
     skip.classList.toggle("hidden", !!free);
-    skip.textContent = "Nie da się ruszyć w żadną stronę — pomiń tę płytkę";
+    skip.textContent = t("probeSkip");
 
     var done = readCount();
     $("probeCount").innerHTML = done === S.n
-      ? "Wszystkie " + S.n + " zapadek potwierdzone. Możesz iść dalej."
-      : "Kliknij na zamku <b>te zapadki, które drgnęły</b> (blade = jeszcze niepotwierdzone), " +
-        "a potem „Reszta bez zmian”. Potwierdzone: <b>" + done + " z " + S.n + "</b>.";
+      ? t("probeCountDone", { n: S.n })
+      : t("probeCount", { done: done, n: S.n });
     $("probeConfirm").disabled = (done !== S.n);
     $("probeRest").disabled = (done === S.n);
   }
@@ -1554,9 +1831,7 @@
 
     for (j = 0; j < S.n; j++) {
       if (delta[j] < -1 || delta[j] > 1) {
-        err.innerHTML = "Zapadka <b>" + (j + 1) + "</b> nie mogła przeskoczyć " +
-          Math.abs(delta[j]) + " otworów jednym ruchem — jeden ruch to najwyżej jeden otwór. " +
-          "Odczytaj ją jeszcze raz.";
+        err.innerHTML = t("errJump", { j: j + 1, k: Math.abs(delta[j]) });
         err.classList.remove("hidden");
         return;
       }
@@ -1567,9 +1842,7 @@
       var fm = S.freeMove;
       for (j = 0; j < S.n; j++) {
         if (delta[j] !== fm.dir * S.E[fm.plate][j]) {
-          err.innerHTML = "To nie zgadza się z tym, co wiem o płytce <b>" + (fm.plate + 1) +
-            "</b>: zapadka <b>" + (j + 1) + "</b> zachowała się inaczej, niż zapisałem. " +
-            "Albo odczyt jest pomylony, albo to powiązanie mam źle. Sprawdź zamek jeszcze raz.";
+          err.innerHTML = t("errFreeMismatch", { p: fm.plate + 1, j: j + 1 });
           err.classList.remove("hidden");
           return;
         }
@@ -1583,9 +1856,7 @@
     }
 
     if (delta[S.probeIdx] === 0) {
-      err.innerHTML = "Zapadka <b>" + (S.probeIdx + 1) + "</b> należy do płytki, którą właśnie " +
-        "przesunąłeś — musiała się ruszyć. Jeśli w grze nic nie drgnęło i usłyszałeś zgrzyt, " +
-        "użyj przycisku „Zgrzyt”.";
+      err.innerHTML = t("errMustMove", { j: S.probeIdx + 1 });
       err.classList.remove("hidden");
       return;
     }
@@ -1605,15 +1876,13 @@
   function jamProbe() {
     var err = $("probeError");
     if (S.freeMove) {
-      err.innerHTML = "Ten ruch powinien być bezpieczny — jeśli zgrzytnął, to któreś " +
-        "powiązanie mam źle. Wciśnij Reset i zrób rozpoznanie od nowa.";
+      err.innerHTML = t("errFreeGrind");
       err.classList.remove("hidden");
       return;
     }
     var other = -S.probeDir;
     if (S.probeTried || !selfSafe(S.probeIdx, other)) {
-      err.innerHTML = "Obie strony zgrzytają — ta płytka jest w tym układzie zablokowana. " +
-        "Pomiń ją: inne ruchy przesuną zamek i wrócimy do niej, gdy będzie miała miejsce.";
+      err.innerHTML = t("errBothJam");
       err.classList.remove("hidden");
       return;
     }
@@ -1621,9 +1890,9 @@
     S.probeDir = other;
     S.pos = S.probePrev.slice();          // nothing moved
     beginProbeRound();
-    err.innerHTML = "Jasne — ten ruch wypchnąłby którąś zapadkę poza krawędź. " +
-      "Przesuń tę samą płytkę <b>" + (S.probeDir === 1 ? "w prawo (→)" : "w lewo (←)") +
-      "</b> i odczytaj zamek.";
+    err.innerHTML = t("okOtherWay", {
+      word: (S.probeDir === 1 ? t("right") + " (→)" : t("left") + " (←)")
+    });
     err.classList.remove("hidden");
     render();
   }
@@ -1747,33 +2016,24 @@
     render();
   }
 
-  function plural(k, one, few, many) {
-    if (k === 1) { return one; }
-    var last = k % 10, tens = k % 100;
-    if (last >= 2 && last <= 4 && !(tens >= 12 && tens <= 14)) { return few; }
-    return many;
-  }
-  var plPress = function (k) { return plural(k, "naciśnięcie", "naciśnięcia", "naciśnięć"); };
-  var plStep  = function (k) { return plural(k, "krok", "kroki", "kroków"); };
+  function plural(k, one, few, many) { return pl3(k, [one, few, many]); }
 
   function renderSolve() {
     var ok = $("solveOk"), bad = $("solveBad"), list = $("moves"),
         panel = $("nowPanel"), box = $("upcomingBox");
 
     if (S.unsolvable) {
-      bad.innerHTML = "Z tego układu nie ma drogi do środka bez uderzenia o krawędź — a prawdziwa skrzynia zawsze ją ma. " +
-        "Czyli jedna obserwacja się nie zgadza. <b>Nie poprawiaj tego na oko:</b> jeśli pomyłka siedzi w powiązaniu, " +
-        "samo przestawienie zapadki da sekwencję, która wygnie Ci wytrych.";
+      bad.innerHTML = t("noPathBody");
       bad.classList.remove("hidden");
       ok.classList.add("hidden");
       panel.classList.add("hidden");
       box.classList.add("hidden");
       $("loadedNote").classList.add("hidden");
       $("resetNote").classList.toggle("hidden", !S.needsReset);
-      $("solveTitle").textContent = "Coś się nie zgadza";
+      $("solveTitle").textContent = t("noPath");
       $("stepDone").disabled = true;
       $("stepBack").disabled = true;
-      renderFixes(diagnose(), "Jedna obserwacja się nie zgadza.");
+      renderFixes(diagnose(), t("headMisread"));
       return;
     }
     bad.classList.add("hidden");
@@ -1782,25 +2042,15 @@
       if (S.runIdx !== 0) {
         // Past step 0 the app's picture of the lock is itself built on the bad links,
         // so it is not evidence. Get back to the one state we both know for sure.
-        bad.innerHTML = "Zgrzyt znaczy, że któreś powiązanie zapisałem źle. Ale jesteś już " +
-          "<b>" + S.runIdx + " " + plStep(S.runIdx) + " od startu</b>, a skoro powiązania " +
-          "kłamią, to i moje wyobrażenie o tym, gdzie stoją teraz zapadki, jest niepewne — " +
-          "nie mam z czego wnioskować. <b>Wciśnij Reset w grze i „Wróć do pozycji startowej” " +
-          "u mnie</b>, potem powtórz pierwszy krok. Jeśli zgrzytnie tam, wskażę winowajcę " +
-          "dokładnie.";
+        bad.innerHTML = t("grindLate", { k: S.runIdx, word: plStep(S.runIdx) });
         bad.classList.remove("hidden");
         $("fixList").classList.add("hidden");
       } else if (S.grindFixes.length) {
-        bad.innerHTML = "Zgrzyt na pierwszym kroku, z pozycji, którą oboje znamy na pewno. " +
-          "To twardy dowód: <b>któreś powiązanie zapisałem z odwrotnym znakiem</b> — i to ono, " +
-          "nie pozycja zapadki.";
+        bad.innerHTML = t("grindFirst");
         bad.classList.remove("hidden");
-        renderFixes(S.grindFixes, "Ten ruch nie miał prawa przejść.");
+        renderFixes(S.grindFixes, t("headGrind"));
       } else {
-        bad.innerHTML = "Zgrzyt na pierwszym kroku, a <b>żadna pojedyncza poprawka tego nie " +
-          "tłumaczy</b> — czyli w rozpoznaniu jest więcej niż jedna pomyłka. Wciśnij Reset " +
-          "i zrób rozpoznanie od nowa; teraz po każdym ruchu odczytujesz wszystkie zapadki, " +
-          "więc ta klasa błędów już nie przejdzie.";
+        bad.innerHTML = t("grindNoFix");
         bad.classList.remove("hidden");
         $("fixList").classList.add("hidden");
       }
@@ -1812,11 +2062,11 @@
 
     // Finished — either we stepped through everything, or the lock was already open.
     if (S.runIdx >= total) {
-      ok.textContent = "Wszystkie zapadki na środku — zamek stoi otworem.";
+      ok.textContent = t("allCentred");
       ok.classList.remove("hidden");
       panel.classList.add("hidden");
       box.classList.add("hidden");
-      $("solveTitle").textContent = "Otwarte";
+      $("solveTitle").textContent = t("opened");
       $("stepDone").disabled = true;
       $("stepBack").disabled = (S.runIdx === 0);
       return;
@@ -1829,8 +2079,7 @@
 
     var note = $("loadedNote");
     if (S.justLoaded && S.loadedName) {
-      note.innerHTML = "Wczytałem „" + S.loadedName + "” — powiązania <b>i</b> ustawienie zapadek wziąłem z pamięci, więc sekwencja jest gotowa od razu. " +
-        "Rzuć okiem na podgląd zamka wyżej: jeśli w grze zapadki stoją inaczej, kliknij „Coś się nie zgadza” na dole.";
+      note.innerHTML = t("loadedNote", { name: S.loadedName });
       note.classList.remove("hidden");
     } else {
       note.classList.add("hidden");
@@ -1838,11 +2087,11 @@
 
     var run = S.grouped[S.runIdx];
     var key = run.dir === 1 ? "→" : "←";
-    var word = run.dir === 1 ? "w prawo" : "w lewo";
+    var word = run.dir === 1 ? t("right") : t("left");
 
-    $("solveTitle").textContent = "Krok " + (S.runIdx + 1) + " z " + total;
+    $("solveTitle").textContent = t("stepOf", { i: S.runIdx + 1, n: total });
 
-    $("nowPlate").textContent = "Płytka " + (run.plate + 1);
+    $("nowPlate").textContent = t("plate", { p: run.plate + 1 });
     $("nowWhere").textContent = "";
 
     // The count is shown as literal keycaps, so "x4" can't be misread.
@@ -1854,8 +2103,9 @@
       k.textContent = key;
       keys.appendChild(k);
     }
-    $("nowCount").innerHTML = "Przesuń <b>" + word + "</b> " + run.count + " " +
-      (run.count === 1 ? "raz" : "razy") + ", potem kliknij „Zrobione”.";
+    $("nowCount").innerHTML = t("pushTimes", {
+      word: word, n: run.count, times: run.count === 1 ? t("once") : t("times")
+    });
 
     // Everything still ahead — no step numbers, so nothing collides with the plate number.
     var pressesLeft = 0;
@@ -1866,7 +2116,7 @@
       var li = document.createElement("li");
 
       var name = document.createElement("span");
-      name.textContent = "Płytka " + (r.plate + 1);
+      name.textContent = t("plate", { p: r.plate + 1 });
       li.appendChild(name);
 
       var cap = document.createElement("span");
@@ -1876,18 +2126,18 @@
 
       var cnt = document.createElement("span");
       cnt.className = "mv-count";
-      cnt.textContent = r.count + (r.count === 1 ? " raz" : " razy");
+      cnt.textContent = r.count + " " + (r.count === 1 ? t("once") : t("times"));
       li.appendChild(cnt);
 
       list.appendChild(li);
     }
 
     if (pressesLeft === 0) {
-      $("upcomingHead").textContent = "To ostatni krok.";
+      $("upcomingHead").textContent = t("lastStep");
       list.classList.add("hidden");
     } else {
       list.classList.remove("hidden");
-      $("upcomingHead").textContent = "Dalej — jeszcze " + pressesLeft + " " + plPress(pressesLeft);
+      $("upcomingHead").textContent = t("upcoming", { n: pressesLeft, word: plPress(pressesLeft) });
     }
 
     $("stepDone").disabled = false;
@@ -2042,7 +2292,7 @@
   }
 
   function moveWord(v) {
-    return v === 1 ? "poszła w prawo" : (v === -1 ? "poszła w lewo" : "nie ruszyła się");
+    return v === 1 ? t("mvRight") : (v === -1 ? t("mvLeft") : t("mvNone"));
   }
 
   function renderFixes(fixes, headline) {
@@ -2053,10 +2303,7 @@
 
     var head = document.createElement("div");
     head.className = "link-row solo";
-    head.innerHTML = headline + (fixes.length === 1
-      ? " Jedno wytłumaczenie pasuje — sprawdź je w grze:"
-      : " Pasuje kilka wytłumaczeń i z samych danych nie da się wybrać właściwego — " +
-        "<b>sprawdź je w grze</b>, zaczynając od góry.");
+    head.innerHTML = headline + (fixes.length === 1 ? t("leadsOne") : t("leadsMany"));
     host.appendChild(head);
 
     for (var k = 0; k < fixes.length; k++) {
@@ -2066,19 +2313,17 @@
 
       var text = document.createElement("div");
       if (f.kind === "link") {
-        text.innerHTML = "Rusz w grze <b>płytkę " + (f.p + 1) + "</b> i popatrz na <b>zapadkę " +
-          (f.j + 1) + "</b>. Jeśli ona <b>" + moveWord(f.to) + "</b> — a zaznaczyłeś, że " +
-          moveWord(f.from) + " — to jest ta pomyłka.";
+        text.innerHTML = t("fixLink", { p: f.p + 1, j: f.j + 1,
+                                        to: moveWord(f.to), from: moveWord(f.from) });
       } else {
-        text.innerHTML = "Sprawdź <b>zapadkę " + (f.i + 1) + "</b> na ekranie gry. Jeśli siedzi w otworze <b>" +
-          (f.to + 1) + "</b>, a nie w " + (f.from + 1) + ", to jest ta pomyłka.";
+        text.innerHTML = t("fixPin", { i: f.i + 1, to: f.to + 1, from: f.from + 1 });
       }
       row.appendChild(text);
 
       var b = document.createElement("button");
       b.type = "button";
       b.style.marginTop = "8px";
-      b.textContent = "Zgadza się — popraw (zamek w " + f.len + " " + plPress(f.len) + ")";
+      b.textContent = t("fixApply", { n: f.len, word: plPress(f.len) });
       (function (fix) {
         b.addEventListener("click", function () { applyFix(fix); });
       })(f);
@@ -2106,19 +2351,18 @@
       var row = document.createElement("div");
       row.className = "link-row" + (pulls.length === 0 ? " solo" : "");
 
-      var html = "<b>Płytka " + (i + 1) + "</b> — ruch <b>→</b> przesuwa jej zapadkę w " +
-        (self === 1 ? "prawo" : "lewo") + ". ";
+      var html = t("linkRow", { i: i + 1, dir: self === 1 ? t("right") : t("left") });
 
       if (pulls.length === 0) {
-        html += "Nie rusza żadnej innej zapadki.";
+        html += t("linkSolo");
       } else {
         var parts = [];
         for (var k = 0; k < pulls.length; k++) {
-          parts.push("zapadkę <b>" + (pulls[k].j + 1) + "</b> " +
-            (pulls[k].same ? "<span class=\"same\">w tę samą stronę</span>"
-                           : "<span class=\"opp\">w przeciwną</span>"));
+          parts.push(t("linkPin", { j: pulls[k].j + 1 }) +
+            (pulls[k].same ? "<span class=\"same\">" + t("linkSame") + "</span>"
+                           : "<span class=\"opp\">" + t("linkOpp") + "</span>"));
         }
-        html += "Ciągnie za sobą " + parts.join(", ") + ".";
+        html += t("linkPulls", { list: parts.join(", ") });
       }
 
       row.innerHTML = html;
@@ -2201,15 +2445,13 @@
     }
     var parts = [];
     for (var k = 0; k < odd.length; k++) {
-      parts.push("płytka <b>" + (odd[k].from + 1) + "</b> rusza zapadkę <b>" +
-        (odd[k].to + 1) + "</b>, ale nie odwrotnie");
+      parts.push(t("asymPair", { a: odd[k].from + 1, b: odd[k].to + 1 }));
     }
-    warn.innerHTML = "<b>Uwaga — " + odd.length + " " +
-      plural(odd.length, "powiązanie działa", "powiązania działają", "powiązań działa") +
-      " tylko w jedną stronę:</b> " + parts.join("; ") + ". W tej grze sprzężone płytki " +
-      "ciągną się <b>wzajemnie</b>, więc to zwykle znak przeoczonego odczytu, a nie dziwnego " +
-      "zamka. Sprawdź te pary w grze — jeśli powiązanie faktycznie jest obustronne, dopisz je " +
-      "w tabeli niżej albo zrób rozpoznanie od nowa.";
+    warn.innerHTML = t("asymWarn", {
+      n: odd.length,
+      word: pl3(odd.length, (STR[S.lang] || STR.pl).badge.links),
+      list: parts.join("; ")
+    });
     warn.classList.remove("hidden");
   }
 
@@ -2229,9 +2471,9 @@
 
     b.classList.toggle("hidden", !usable);
     tag.classList.toggle("hidden", !(usable && atStart()));
-    tag.textContent = "Krok 0 — pozycja startowa";
+    tag.textContent = t("atStart");
 
-    b.textContent = (S.stage === "probe") ? "↺ Zacznij naukę od nowa" : "↺ Wróć do kroku 0";
+    b.textContent = (S.stage === "probe") ? t("restartProbe") : t("resetToStart");
   }
 
   function resetToStart() {
@@ -2250,31 +2492,28 @@
     solveAndRender();
   }
 
-  var PHASES = [
-    { key: "setup", label: "Ustawienie" },
-    { key: "probe", label: "Nauka" },
-    { key: "solve", label: "Rozwiązanie" }
-  ];
+  var PHASE_KEYS = ["setup", "probe", "solve"];
 
   function renderPhases() {
-    var now = 0, i;
-    for (i = 0; i < PHASES.length; i++) { if (PHASES[i].key === S.stage) { now = i; } }
+    var labels = t("phases"), now = PHASE_KEYS.indexOf(S.stage), i;
+    if (now < 0) { now = 0; }
 
     var host = $("phases");
     host.innerHTML = "";
-    for (i = 0; i < PHASES.length; i++) {
+    for (i = 0; i < PHASE_KEYS.length; i++) {
       var chip = document.createElement("span");
       chip.className = "phase" + (i === now ? " is-now" : (i < now ? " is-done" : ""));
       var num = document.createElement("b");
       num.textContent = String(i + 1);
       chip.appendChild(num);
       var lab = document.createElement("span");
-      lab.textContent = " " + PHASES[i].label;
+      lab.textContent = " " + labels[i];
       chip.appendChild(lab);
       host.appendChild(chip);
     }
 
-    $("helpToggle").textContent = S.showHelp ? "Ukryj opisy" : "Pokaż opisy";
+    $("helpToggle").textContent = S.showHelp ? t("hideHelp") : t("showHelp");
+    $("langToggle").textContent = S.lang === "pl" ? "EN" : "PL";
     if (document.body) { document.body.classList.toggle("hide-help", !S.showHelp); }
   }
 
@@ -2292,9 +2531,9 @@
     if (S.stage === "setup") {
       var left = S.n - placedCount();
       text.innerHTML = left === 0
-        ? "<b>Zapadki ustawione.</b> " + (linksKnown() ? "Powiązania już znam." : "Teraz rozpoznanie.")
-        : "Kliknij na zamku otwór każdej zapadki — <b>zostało " + left + "</b>.";
-      act.textContent = linksKnown() ? "Policz" : "Dalej";
+        ? t("tbPlaced") + " " + (linksKnown() ? t("tbKnown") : t("tbLearn"))
+        : t("tbPlace", { left: left });
+      act.textContent = linksKnown() ? t("calc") : t("next");
       act.disabled = (left !== 0);
       return;
     }
@@ -2304,44 +2543,47 @@
       var plate = free ? free.plate : S.probeIdx;
       var dir = free ? free.dir : S.probeDir;
       var read = readCount();
-      text.innerHTML = "<b>Płytka " + (plate + 1) + " " + (dir === 1 ? "→ w prawo" : "← w lewo") +
-        "</b> · " + read + "/" + S.n;
-      alt.textContent = "Reszta";
+      text.innerHTML = t("tbProbe", {
+        p: plate + 1, arrow: dir === 1 ? "→" : "←",
+        word: dir === 1 ? t("right") : t("left"), done: read, n: S.n
+      });
+      alt.textContent = t("rest");
       alt.disabled = (read === S.n);
       alt.classList.remove("hidden");
-      alt2.textContent = "Zgrzyt";
+      alt2.textContent = t("grind");
       alt2.className = "danger";
       alt2.classList.remove("hidden");
-      act.textContent = "Dalej";
+      act.textContent = t("next");
       act.disabled = (read !== S.n);
       return;
     }
 
     // solve
     if (S.unsolvable) {
-      text.innerHTML = "<b>Coś się nie zgadza</b> · sprawdź tropy niżej";
-      act.textContent = "Dalej";
+      text.innerHTML = t("tbBad");
+      act.textContent = t("next");
       act.disabled = true;
       return;
     }
     if (S.runIdx >= S.grouped.length) {
-      text.innerHTML = "<b>Zamek otwarty.</b>";
-      act.textContent = "Gotowe";
+      text.innerHTML = t("tbOpen");
+      act.textContent = t("done");
       act.disabled = true;
       return;
     }
     var run = S.grouped[S.runIdx];
-    text.innerHTML = "<b>Płytka " + (run.plate + 1) + " " +
-      (run.dir === 1 ? "→ w prawo" : "← w lewo") + " ×" + run.count + "</b>" +
-      (S.needsReset ? " · najpierw Reset w grze" : "");
-    alt.textContent = "Cofnij";
+    text.innerHTML = t("tbStep", {
+      p: run.plate + 1, arrow: run.dir === 1 ? "→" : "←",
+      word: run.dir === 1 ? t("right") : t("left"), c: run.count
+    }) + (S.needsReset ? t("tbReset") : "");
+    alt.textContent = t("back");
     alt.disabled = (S.runIdx === 0);
     alt.className = "";
     alt.classList.remove("hidden");
-    alt2.textContent = "Zgrzyt";
+    alt2.textContent = t("grind");
     alt2.className = "danger";
     alt2.classList.remove("hidden");
-    act.textContent = "Zrobione";
+    act.textContent = t("doneBtn");
     act.disabled = false;
   }
 
@@ -2407,6 +2649,9 @@
   });
   $("doExport").addEventListener("click", exportLocks);
   $("doImport").addEventListener("click", importLocks);
+  $("langToggle").addEventListener("click", function () {
+    setLang(S.lang === "pl" ? "en" : "pl");
+  });
   $("helpToggle").addEventListener("click", function () {
     S.showHelp = !S.showHelp;
     writeJSON(HELP_KEY, S.showHelp);
@@ -2436,14 +2681,14 @@
     var msg = $("saveMsg");
     var result = saveLock($("lockName").value);
     if (!result) {
-      msg.textContent = "Nadaj skrzyni nazwę, po której ją poznasz — np. „skrzynia u Diego”.";
+      msg.textContent = t("saveNeedName");
       msg.classList.remove("hidden");
       $("lockName").focus();
       return;
     }
     msg.textContent = result === "updated"
-      ? "Zaktualizowałem „" + S.loadedName + "”. Następnym razem pominiesz rozpoznanie."
-      : "Zapisane jako „" + S.loadedName + "”. Następnym razem pominiesz rozpoznanie.";
+      ? t("saveUpdated", { name: S.loadedName })
+      : t("saveOk", { name: S.loadedName });
     msg.classList.remove("hidden");
     render();
   });
@@ -2474,6 +2719,14 @@
     $("lockName").value = "";
     setPlateCount(S.n);
   });
+
+  var savedLang = readJSON(LANG_KEY);
+  if (savedLang === "pl" || savedLang === "en") {
+    S.lang = savedLang;
+  } else if (typeof navigator !== "undefined" && navigator.language) {
+    S.lang = /^pl/i.test(navigator.language) ? "pl" : "en";
+  }
+  applyStatic();
 
   var savedHelp = readJSON(HELP_KEY);
   S.showHelp = (savedHelp === null ? true : !!savedHelp);
