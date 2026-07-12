@@ -18,13 +18,17 @@ If a plate is jammed in both directions, skip it and come back. At the end, pres
 
 **3 · Solve.** One instruction at a time: which plate, which way, how many times. The links and a live picture of the lock stay on screen. You can jump back to the starting layout, or fix a pin by clicking straight on the lock.
 
-## Why not the other solvers
+## Why I built it
 
-Every other tool makes you type the link matrix by hand, and assumes "right" means the same thing in the game as it does in their code. Hence their instructions: *"if the solution doesn't work, invert all directions."*
+I play with lockpicking maxed out, and the chests still ate my picks. So I tried the solvers — and every one of them wanted the **link matrix typed in by hand**. But working out which plate drags which is *the hard part*; once you've done it in your head, you barely need the tool. And they all ship the same disclaimer: *"if the solution doesn't work, invert all the directions."* That isn't a solver. That's homework with extra steps.
 
-This one assumes nothing about directions. It reasons only about what you can actually see — **the hole a pin sits in** — and the key you actually press. If the game draws the movement mirrored, that inversion is recorded during the learning step, and you never notice it.
+So this one asks for the only thing you can read off the screen without thinking: **which hole each pin sits in**. It works the directions out itself — and if the game draws the movement mirrored, that inversion simply gets recorded, and you never even find out.
 
-On top of that:
+The part I care about most: it **argues with itself**. It warns when the links it learned come out one-sided (in this game coupled plates always pull each other *both* ways, so a one-way link means a misread). It refuses readings that are physically impossible. And when a move grinds in game, it tells you **which link must have been recorded with the wrong sign** — instead of quietly handing you another sequence that bends your pick.
+
+I know that failure mode intimately, because this tool did it to me before I fixed it. Now the test suite drives every sequence against a simulated game that refuses illegal moves, so it can't happen again quietly.
+
+Also:
 
 - **Chest library.** Save a chest under a name. On your next visit it is recognised by its starting layout and hands you a ready sequence — nothing to re-enter.
 - **It catches its own mistakes.** It warns when links come out one-sided (in this game coupled plates always pull each other *both* ways, so a one-way link means a misread), it refuses impossible readings, and when you report a grind on the first move it tells you **which link must have been recorded with the wrong sign**.
@@ -62,11 +66,15 @@ Jeśli płytka jest zablokowana w obie strony, pomijasz ją i wracasz później.
 
 **3 · Rozwiązanie.** Jedna instrukcja na raz: która płytka, w którą stronę, ile razy. Powiązania i podgląd zamka masz cały czas na oczach. Możesz wrócić do pozycji startowej albo poprawić zapadkę, klikając wprost na zamku.
 
-## Czym się różni od innych solverów
+## Dlaczego to powstało
 
-Konkurencyjne narzędzia każą wpisać macierz powiązań ręcznie i zakładają, że „w prawo" znaczy w grze to samo co u nich w kodzie. Stąd ich instrukcje w stylu *„jeśli rozwiązanie nie działa, odwróć wszystkie kierunki"*.
+Gram z wymaksowanym otwieraniem zamków, a skrzynie i tak zjadały mi wytrychy. Więc sięgnąłem po solvery — i każdy chciał, żebym **wklepał macierz powiązań ręcznie**. Tylko że rozgryzienie, która płytka ciągnie którą, to jest *ta trudna część*; jak już masz to w głowie, narzędzie prawie nie jest potrzebne. A do tego wszystkie mają tę samą adnotację: *„jeśli rozwiązanie nie działa, odwróć wszystkie kierunki"*. To nie jest solver. To praca domowa z dodatkowymi krokami.
 
-Ten nie zakłada o kierunkach niczego. Liczy wyłącznie w tym, co realnie widać — **w numerze otworu, w którym siedzi zapadka** — i w kierunku, który faktycznie naciskasz. Jeśli gra rysuje ruch lustrzanie, ta odwrotność zapisuje się sama podczas nauki.
+Ten pyta więc o jedyną rzecz, którą da się odczytać z ekranu bez myślenia: **w którym otworze siedzi każda zapadka**. Kierunki wylicza sam — a jeśli gra rysuje ruch lustrzanie, ta odwrotność po prostu się zapisuje i nawet się o niej nie dowiesz.
+
+Najbardziej zależy mi na tym, że narzędzie **spiera się samo ze sobą**. Ostrzega, gdy wyuczone powiązania wychodzą jednostronne (w tej grze sprzężone płytki ciągną się *wzajemnie*, więc jednostronne = przeoczony odczyt). Odrzuca odczyty fizycznie niemożliwe. A gdy ruch zgrzytnie w grze, mówi, **które powiązanie musiało zostać zapisane z odwrotnym znakiem** — zamiast po cichu podać kolejną sekwencję, która wygina wytrych.
+
+Ten sposób psucia się znam z pierwszej ręki, bo to narzędzie zrobiło mi to zanim je naprawiłem. Teraz każda sekwencja przechodzi w testach przez symulowaną grę, która odrzuca nielegalne ruchy — więc po cichu już się to nie powtórzy.
 
 Poza tym:
 
