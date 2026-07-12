@@ -9,7 +9,7 @@
 <meta name="theme-color" content="#DAD9D3" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#14181A" media="(prefers-color-scheme: dark)">
 <meta name="description" content="Solver zamków do Gothic 1 Remake. Rozpoznaje powiązania płytek i liczy najkrótszą sekwencję ruchów, w której wytrych się nie wygnie.">
-<title>Wytrych — solver zamków do Gothic 1 Remake</title>
+<title>Wytrych — solver zamków do Gothic 1 Remake (by jareq7)</title>
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>%F0%9F%97%9D%EF%B8%8F</text></svg>">
 </head>
 <body>
@@ -169,6 +169,15 @@
     text-wrap: balance;
   }
   .lede { margin: 0; color: var(--text-dim); font-size: 15px; max-width: 48ch; }
+  .byline {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 12px;
+    color: var(--text-dim);
+    margin: 2px 0 0;
+  }
+  .byline a { color: var(--verdigris); text-decoration: none; border-bottom: 1px solid transparent; }
+  .byline a:hover { border-bottom-color: var(--verdigris); }
+  .byline a:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
 
   /* ---- the lock: a window into the game, so it stays dark in both themes ---- */
   .lock {
@@ -632,6 +641,7 @@
     <span class="eyebrow">Gothic 1 Remake</span>
     <h1>Wytrych</h1>
     <p class="lede">Powiedz mi, gdzie teraz stoją zapadki. Policzę najkrótszą sekwencję ruchów, w której żadna z nich nie uderzy o krawędź — czyli bez wyginania wytrycha.</p>
+    <p class="byline">solver zamków · by <a href="https://github.com/jareq7/gothic-remake-lockpick-solver" target="_blank" rel="noopener">jareq7</a></p>
   </header>
 
   <div class="layout">
