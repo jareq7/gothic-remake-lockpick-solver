@@ -1,0 +1,2069 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Solver zamków do Gothic 1 Remake. Rozpoznaje powiązania płytek i liczy najkrótszą sekwencję ruchów, w której wytrych się nie wygnie.">
+<title>Wytrych — solver zamków do Gothic 1 Remake</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='14' font-size='14'>%F0%9F%97%9D%EF%B8%8F</text></svg>">
+</head>
+<body>
+
+<button id="themeToggle" type="button" class="theme-toggle" aria-label="Przełącz motyw jasny/ciemny">◐</button>
+
+<style>
+  :root {
+    color-scheme: light dark;
+
+    --ground:   #DAD9D3;
+    --panel:    #EDECE7;
+    --panel-2:  #E2E1DA;
+    --line:     #B9B8AF;
+    --line-soft:#CBCAC2;
+    --text:     #1C2124;
+    --text-dim: #5C6469;
+    --verdigris:#2F7A66;
+    --verdigris-soft: rgba(47,122,102,.12);
+    --ember:    #B7601A;
+    --ember-soft: rgba(183,96,26,.14);
+    --blood:    #96332D;
+    --shadow:   0 1px 0 rgba(0,0,0,.05), 0 6px 20px -12px rgba(0,0,0,.35);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --ground:   #14181A;
+      --panel:    #1E2427;
+      --panel-2:  #262D31;
+      --line:     #3A4348;
+      --line-soft:#2C3438;
+      --text:     #DDE2E0;
+      --text-dim: #8C979C;
+      --verdigris:#67AF97;
+      --verdigris-soft: rgba(103,175,151,.14);
+      --ember:    #E08A3C;
+      --ember-soft: rgba(224,138,60,.16);
+      --blood:    #C4544C;
+      --shadow:   0 1px 0 rgba(255,255,255,.03), 0 10px 30px -16px rgba(0,0,0,.8);
+    }
+  }
+
+  :root[data-theme="light"] {
+    --ground:#DAD9D3; --panel:#EDECE7; --panel-2:#E2E1DA;
+    --line:#B9B8AF; --line-soft:#CBCAC2;
+    --text:#1C2124; --text-dim:#5C6469;
+    --verdigris:#2F7A66; --verdigris-soft:rgba(47,122,102,.12);
+    --ember:#B7601A; --ember-soft:rgba(183,96,26,.14);
+    --blood:#96332D;
+    --shadow:0 1px 0 rgba(0,0,0,.05), 0 6px 20px -12px rgba(0,0,0,.35);
+  }
+  :root[data-theme="dark"] {
+    --ground:#14181A; --panel:#1E2427; --panel-2:#262D31;
+    --line:#3A4348; --line-soft:#2C3438;
+    --text:#DDE2E0; --text-dim:#8C979C;
+    --verdigris:#67AF97; --verdigris-soft:rgba(103,175,151,.14);
+    --ember:#E08A3C; --ember-soft:rgba(224,138,60,.16);
+    --blood:#C4544C;
+    --shadow:0 1px 0 rgba(255,255,255,.03), 0 10px 30px -16px rgba(0,0,0,.8);
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--ground);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-size: 16px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap {
+    max-width: 940px;
+    margin: 0 auto;
+    padding: 28px 18px 64px;
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 232px;
+    gap: 24px;
+    align-items: start;
+  }
+  .col { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+
+  .library {
+    position: sticky;
+    top: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 14px;
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    box-shadow: var(--shadow);
+  }
+  .lib-head {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .lib-empty { font-size: 13px; color: var(--text-dim); margin: 0; }
+
+  @media (max-width: 860px) {
+    .layout { grid-template-columns: 1fr; }
+    .library { position: static; }
+  }
+
+  .theme-toggle {
+    position: fixed;
+    top: 14px;
+    right: 14px;
+    z-index: 10;
+    width: 34px;
+    height: 34px;
+    padding: 0;
+    font-size: 15px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    border-radius: 50%;
+    cursor: pointer;
+  }
+  .theme-toggle:hover { color: var(--verdigris); border-color: var(--verdigris); }
+  .theme-toggle:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+
+  /* ---- masthead ---- */
+  .masthead { display: flex; flex-direction: column; gap: 6px; }
+  .eyebrow {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  h1 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 30px;
+    line-height: 1.15;
+    font-weight: 600;
+    letter-spacing: -.01em;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lede { margin: 0; color: var(--text-dim); font-size: 15px; max-width: 48ch; }
+
+  /* ---- the lock: a window into the game, so it stays dark in both themes ---- */
+  .lock {
+    --hole: 26px;
+    background: radial-gradient(130% 110% at 25% 15%, #262E33 0%, #141A1D 55%, #090C0E 100%);
+    border: 1px solid #000;
+    border-radius: 4px;
+    box-shadow: var(--shadow), inset 0 1px 0 rgba(255,255,255,.05);
+    padding: 14px 16px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    color: #C8CFCD;
+    overflow: hidden;
+  }
+  .lock-head, .lock-foot {
+    display: flex; justify-content: space-between; align-items: baseline; gap: 10px;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: #78868A;
+  }
+  .lock-foot {
+    text-transform: none; letter-spacing: 0;
+    border-top: 1px solid rgba(255,255,255,.07);
+    padding-top: 8px;
+  }
+  .lock-foot strong { color: #E8875A; font-weight: 700; }
+
+  .lock-actions {
+    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    padding-top: 2px;
+  }
+  .lock-actions button {
+    background: rgba(255,255,255,.06);
+    border: 1px solid rgba(255,255,255,.18);
+    color: #C8CFCD;
+    font-size: 13px;
+    padding: 7px 12px;
+  }
+  .lock-actions button:hover { border-color: var(--verdigris); color: var(--verdigris); }
+  .at-start {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .1em; text-transform: uppercase;
+    color: var(--verdigris);
+  }
+
+  /* the plates recede up and to the right, the way the stack sits on screen */
+  #plates {
+    display: flex;
+    flex-direction: column;   /* plate 1 is drawn last, i.e. at the bottom */
+    align-items: flex-start;
+    gap: 6px;
+    padding: 12px 4px 8px;
+  }
+  .plate {
+    display: grid;
+    grid-template-columns: 16px auto;
+    align-items: center;
+    gap: 10px;
+  }
+  .plate-name {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: #667377;
+    text-align: right;
+  }
+  .plate.is-focus .plate-name { color: var(--verdigris); }
+
+  /* a slim steel bar with seven drilled holes — not a row of giant discs */
+  .holes {
+    display: flex;
+    gap: 6px;
+    padding: 6px 11px;
+    border-radius: 999px;
+    background: linear-gradient(180deg, #6B757C 0%, #48525A 30%, #313940 70%, #1E2429 100%);
+    border: 1px solid #0C1114;
+    box-shadow:
+      0 6px 12px rgba(0,0,0,.55),
+      inset 0 1px 0 rgba(255,255,255,.22),
+      inset 0 -1px 0 rgba(0,0,0,.5);
+  }
+  .plate.is-focus .holes { outline: 2px solid var(--verdigris); outline-offset: 3px; }
+
+  .hole {
+    width: var(--hole);
+    height: var(--hole);
+    flex: 0 0 auto;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: radial-gradient(circle at 45% 30%, #10161A 0%, #05080A 100%);
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 1px 0 rgba(255,255,255,.1);
+    display: grid;
+    place-items: center;
+    cursor: default;
+  }
+  .hole.is-center {
+    box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 0 0 1px rgba(232,135,90,.5);
+  }
+  .lock.is-pickable .hole { cursor: pointer; }
+  .lock.is-pickable .hole:hover { box-shadow: inset 0 2px 3px rgba(0,0,0,.95), 0 0 0 2px var(--verdigris); }
+  .hole:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+
+  /* the pin: a bronze stud sunk in the hole; it pops up red once it hits the centre */
+  .pin {
+    width: 58%; height: 58%;
+    border-radius: 50%;
+    background: linear-gradient(180deg, #CDBB94 0%, #8B7B5F 100%);
+    box-shadow: 0 1px 2px rgba(0,0,0,.7), inset 0 1px 0 rgba(255,255,255,.35);
+    transition: background .18s ease, box-shadow .18s ease, transform .18s ease;
+  }
+  .hole.is-center .pin {
+    background: linear-gradient(180deg, #FF9E6B 0%, #C33A28 100%);
+    box-shadow: 0 0 0 3px rgba(224,138,60,.20), 0 0 10px rgba(232,135,90,.7),
+                inset 0 1px 0 rgba(255,255,255,.4);
+    transform: scale(1.25);
+  }
+  /* during discovery a pin you have not re-read yet is a ghost: it shows where it WAS */
+  .pin.unread {
+    opacity: .28;
+    background: linear-gradient(180deg, #8A8F92 0%, #55595C 100%);
+    box-shadow: none;
+  }
+  .plate.unread .plate-name { color: var(--ember); }
+
+  @media (prefers-reduced-motion: reduce) { .pin { transition: none; } }
+
+  @media (max-width: 520px) { .lock { --hole: 20px; } }
+
+  /* ---- panels ---- */
+  .card {
+    background: var(--panel);
+    border: 1px solid var(--line-soft);
+    border-radius: 4px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: var(--shadow);
+  }
+  .card h2 {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 18px; font-weight: 600; margin: 0;
+  }
+  .step-tag {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--verdigris);
+  }
+  .card p { margin: 0; color: var(--text-dim); font-size: 14px; }
+  .card p.plain { color: var(--text); }
+
+  /* ---- controls ---- */
+  .row { display: flex; flex-wrap: wrap; gap: 8px; }
+  button {
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background .12s ease, border-color .12s ease;
+  }
+  button:hover { border-color: var(--verdigris); }
+  button:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+  button.primary {
+    background: var(--verdigris);
+    border-color: var(--verdigris);
+    color: var(--panel);
+    font-weight: 600;
+  }
+  button.primary:hover { filter: brightness(1.08); }
+  button.danger { color: var(--blood); border-color: var(--line); }
+  button.danger:hover { border-color: var(--blood); }
+  button.ghost { background: transparent; }
+  button[aria-pressed="true"] {
+    background: var(--verdigris-soft);
+    border-color: var(--verdigris);
+    color: var(--verdigris);
+    font-weight: 600;
+  }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+
+  .keycap {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-weight: 700;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-bottom-width: 2px;
+    border-radius: 3px;
+    padding: 1px 6px;
+    font-size: 13px;
+    color: var(--text);
+  }
+
+  /* ---- probe reporting grid ---- */
+  .report { display: flex; flex-direction: column; gap: 6px; }
+  .report-row {
+    display: grid;
+    grid-template-columns: 62px 1fr;
+    align-items: center;
+    gap: 10px;
+  }
+  .report-row .plate-name.subject { color: var(--verdigris); font-weight: 700; }
+  .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+  .seg button {
+    padding: 8px 0;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 15px;
+  }
+
+  /* ---- solution list ---- */
+  /* the one thing you should be doing right now */
+  .now {
+    border: 1px solid var(--verdigris);
+    background: var(--verdigris-soft);
+    border-radius: 4px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .now-what {
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .now-where { font-size: 13px; color: var(--text-dim); }
+  .keys { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .key-big {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-bottom-width: 3px;
+    border-radius: 4px;
+    min-width: 44px;
+    padding: 8px 0;
+    text-align: center;
+  }
+  .now-count { font-size: 14px; color: var(--text); margin-top: 8px; }
+  .now-count b { color: var(--ember); }
+
+  .saved-list { display: flex; flex-direction: column; gap: 6px; }
+  .saved-item { position: relative; }
+  .saved-item .open {
+    width: 100%;
+    text-align: left;
+    padding: 9px 34px 9px 10px;
+    background: var(--panel-2);
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    line-height: 1.3;
+  }
+  .saved-item .open[aria-pressed="true"] { font-weight: 600; }
+  .saved-item .meta {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    font-weight: 400;
+  }
+  .saved-item .del {
+    position: absolute;
+    top: 50%;
+    right: 4px;
+    transform: translateY(-50%);
+    padding: 3px 7px;
+    font-size: 13px;
+    line-height: 1;
+    color: var(--text-dim);
+    background: transparent;
+    border-color: transparent;
+  }
+  .saved-item .del:hover { color: var(--blood); border-color: var(--blood); }
+
+  .save-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .save-row input {
+    flex: 1 1 12em;
+    min-width: 0;
+    font: inherit;
+    font-size: 14px;
+    color: var(--text);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 9px 12px;
+  }
+  .save-row input::placeholder { color: var(--text-dim); }
+  .save-row input:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 2px; }
+
+  .link-list { display: flex; flex-direction: column; gap: 5px; }
+  .link-row {
+    font-size: 14px;
+    color: var(--text-dim);
+    padding: 7px 10px;
+    background: var(--panel-2);
+    border-radius: 3px;
+    border-left: 2px solid var(--line);
+  }
+  .link-row b { color: var(--text); font-weight: 600; }
+  .link-row .same { color: var(--verdigris); font-weight: 600; }
+  .link-row .opp  { color: var(--blood); font-weight: 600; }
+  .link-row.solo { border-left-color: var(--line-soft); font-style: italic; }
+
+  .links-box {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 14px;
+  }
+
+  .list-head {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 11px; letter-spacing: .14em; text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  #upcomingBox { display: flex; flex-direction: column; gap: 8px; }
+  ol.moves { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; }
+  ol.moves li {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    align-items: center;
+    gap: 10px;
+    padding: 7px 10px;
+    border-radius: 3px;
+    font-size: 14px;
+    color: var(--text-dim);
+  }
+  ol.moves li:nth-child(odd) { background: var(--panel-2); }
+  ol.moves li .mv-count {
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+    color: var(--ember);
+    min-width: 5.5em;
+    text-align: right;
+  }
+
+  .banner {
+    border-left: 3px solid var(--ember);
+    background: var(--ember-soft);
+    padding: 10px 12px;
+    border-radius: 0 3px 3px 0;
+    font-size: 14px;
+  }
+  .banner.bad { border-color: var(--blood); background: transparent; color: var(--blood); }
+  .banner.good { border-color: var(--verdigris); background: var(--verdigris-soft); color: var(--text); }
+
+  .hidden { display: none !important; }
+
+  /* ---- links matrix (advanced) ---- */
+  details { border-top: 1px solid var(--line-soft); padding-top: 12px; }
+  summary {
+    cursor: pointer;
+    font-size: 13px;
+    color: var(--text-dim);
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+  }
+  summary:focus-visible { outline: 2px solid var(--verdigris); outline-offset: 3px; }
+  .matrix-scroll { overflow-x: auto; margin-top: 10px; }
+  table.matrix {
+    border-collapse: collapse;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    font-size: 13px;
+    font-variant-numeric: tabular-nums;
+  }
+  table.matrix th, table.matrix td {
+    border: 1px solid var(--line-soft);
+    padding: 5px 9px;
+    text-align: center;
+    color: var(--text-dim);
+    white-space: nowrap;
+  }
+  table.matrix th { color: var(--text); font-weight: 600; }
+  table.matrix td.same { color: var(--verdigris); }
+  table.matrix td.opp  { color: var(--blood); }
+
+  footer {
+    font-size: 13px;
+    color: var(--text-dim);
+    display: flex; flex-direction: column; gap: 10px;
+    border-top: 1px solid var(--line-soft);
+    padding-top: 16px;
+  }
+  footer strong { color: var(--text); font-weight: 600; }
+</style>
+
+<div class="wrap">
+
+  <header class="masthead">
+    <span class="eyebrow">Gothic 1 Remake</span>
+    <h1>Wytrych</h1>
+    <p class="lede">Powiedz mi, gdzie teraz stoją zapadki. Policzę najkrótszą sekwencję ruchów, w której żadna z nich nie uderzy o krawędź — czyli bez wyginania wytrycha.</p>
+  </header>
+
+  <div class="layout">
+  <main class="col">
+
+  <!-- ============ LOCK ============ -->
+  <section class="lock" id="lock" aria-label="Podgląd zamka">
+    <div class="lock-head">
+      <span id="lockHint">Ustaw zapadki</span>
+      <span>środek = 4. otwór</span>
+    </div>
+    <div id="plates"></div>
+    <div class="lock-foot">
+      <span id="lockStatus">—</span>
+      <span><strong id="doneCount">0</strong>/<span id="totalCount">0</span> na środku</span>
+    </div>
+    <div class="lock-actions">
+      <button id="resetToStart" class="hidden">↺ Wróć do pozycji startowej</button>
+      <span class="at-start hidden" id="atStart">Krok 0 — pozycja startowa</span>
+    </div>
+  </section>
+
+  <!-- ============ LINKS: always on screen, whatever step you are on ============ -->
+  <section class="card hidden" id="cardLinks">
+    <span class="step-tag">Powiązania tej skrzyni</span>
+    <h2>Co ciągnie co</h2>
+    <p class="banner bad hidden" id="asymWarn"></p>
+    <div class="link-list" id="linkList"></div>
+    <details id="matrixBox">
+      <summary>Tabela do korekty</summary>
+      <div class="matrix-scroll">
+        <table class="matrix" id="matrix"></table>
+      </div>
+      <p style="margin-top:10px">Wiersz = płytka, którą przesuwasz w <b>prawo</b>. Kolumna = zapadka, która się przez to rusza. Kliknij komórkę, żeby ją zmienić.</p>
+    </details>
+  </section>
+
+  <!-- ============ STEP 1: SETUP ============ -->
+  <section class="card" id="cardSetup">
+    <span class="step-tag">Krok 1 — zamek</span>
+    <h2>Ile płytek ma zamek?</h2>
+    <div class="row" id="plateCount"></div>
+
+    <p><b>Płytka 1 to ta najbliższa — na dole.</b> To ta, na której stoi kursor zaraz po otwarciu zamka i po każdym resecie. Kolejne numery idą w górę: płytka 2 to jedno naciśnięcie <b>góra</b>. Dzięki temu numeracja pokrywa się z tym, jak gra sama przeskakuje między płytkami — i po pęknięciu wytrycha zawsze wracasz na jedynkę.</p>
+    <p class="plain">Teraz kliknij na obrazku wyżej, gdzie <b>w tej chwili</b> siedzi zapadka każdej płytki — ten brązowy bolec. Wskazujesz obecny stan zamka, nie cel.</p>
+    <p>Celu nie musisz nigdzie zaznaczać: dla każdej płytki jest nim zawsze środkowy, 4. otwór — u mnie oznaczony pomarańczową przerywaną obwódką. A zapadka, która w grze wyskoczyła do góry i świeci na czerwono, <b>już siedzi w tym środkowym otworze</b> — czerwony kolor to potwierdzenie, że jest gotowa, a nie wskazówka, gdzie ma trafić. Dla takiej płytki po prostu kliknij środek.</p>
+    <p class="banner good hidden" id="knownBanner"></p>
+    <p class="banner hidden" id="matchBanner"></p>
+    <div class="row">
+      <button class="primary hidden" id="loadMatch">Wczytaj powiązania z pamięci</button>
+      <button class="primary" id="toProbe">Zapadki ustawione →</button>
+      <button class="ghost hidden" id="reProbe">Rozpoznaj powiązania od nowa</button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 2: PROBE ============ -->
+  <section class="card hidden" id="cardProbe">
+    <span class="step-tag" id="probeTag">Krok 2 — rozpoznanie</span>
+    <h2 id="probeTitle">Płytka 1: przesuń <span class="keycap">→</span> raz</h2>
+    <p>Płytkę wybierasz w grze ruchem <b>góra/dół</b>, a przesuwasz ją <b>lewo/prawo</b>. Powiązania są dla skrzyni stałe, ale muszę je poznać — a poznaję je z tego, co ruch zrobił z zamkiem.</p>
+    <p class="plain"><b>Po ruchu odczytaj zamek na nowo: kliknij otwór, w którym teraz siedzi każda zapadka</b> — wszystkie po kolei, także te, które Twoim zdaniem nie drgnęły. Nie zgaduj z pamięci, patrz na ekran gry.</p>
+    <p><b>Punktem odniesienia jest stan sprzed tego jednego ruchu — nie krok 0.</b> Zamek kumuluje ruchy próbne: kiedy ruszasz płytkę 2, stoi tam, gdzie zostawiła go płytka 1. Blade zapadki w podglądzie pokazują właśnie to: gdzie każda stała przed chwilą. Ty klikasz, gdzie siedzi teraz — a różnicę wyliczam sam.</p>
+    <p class="banner">Ruch próbny naprawdę rusza zamkiem — tak ma być. <b>Na koniec poproszę o Reset</b>, więc zamek wróci do układu z kroku 1 i rozpoznanie nic Cię nie kosztuje.</p>
+
+    <p class="banner hidden" id="freeNote"></p>
+    <p class="banner good" id="probeCount">Odczytane: 0 z 5 zapadek</p>
+    <p class="banner bad hidden" id="probeError"></p>
+
+    <div class="row">
+      <button class="primary" id="probeConfirm">Odczytane — dalej</button>
+      <button class="danger" id="probeJam">Zgrzyt — ruch nie przeszedł</button>
+      <button class="ghost" id="probeSkip">Nie da się ruszyć w żadną stronę — pomiń tę płytkę</button>
+    </div>
+  </section>
+
+  <!-- ============ STEP 3: SOLUTION ============ -->
+  <section class="card hidden" id="cardSolve">
+    <span class="step-tag" id="solveTag">Krok 3 — otwieranie</span>
+    <h2 id="solveTitle">Sekwencja</h2>
+    <p class="banner good hidden" id="solveOk"></p>
+    <p class="banner bad hidden" id="solveBad"></p>
+    <div class="link-list hidden" id="fixList"></div>
+    <p class="banner hidden" id="loadedNote"></p>
+
+    <div class="hidden" id="resetNote">
+      <p class="banner"><b>Wciśnij teraz Reset w grze</b> — klawisz <span class="keycap">R</span> na klawiaturze albo <span class="keycap">Y</span> na padzie. Ruchy próbne rozjechały zamek, a Reset cofa go do układu, który wpisałeś w kroku 1. Od niego policzyłem sekwencję. Reset nic nie kosztuje.</p>
+      <div class="row">
+        <button class="ghost" id="noReset">Nie resetowałem — licz od stanu po ruchach próbnych</button>
+      </div>
+    </div>
+
+    <div class="now" id="nowPanel">
+      <span class="now-what" id="nowPlate">—</span>
+      <span class="now-where" id="nowWhere"></span>
+      <div class="keys" id="nowKeys"></div>
+      <span class="now-count" id="nowCount"></span>
+    </div>
+
+    <div class="row">
+      <button class="primary" id="stepDone">Zrobione — dalej</button>
+      <button class="ghost" id="stepBack">Cofnij</button>
+      <button class="danger" id="grind">Zgrzyt — ten ruch nie przechodzi</button>
+    </div>
+
+    <div id="upcomingBox">
+      <span class="list-head" id="upcomingHead">Potem, w tej kolejności</span>
+      <ol class="moves" id="moves"></ol>
+    </div>
+    <div class="save-row">
+      <input id="lockName" type="text" maxlength="40" placeholder="Nazwa skrzyni, np. skrzynia u Diego" aria-label="Nazwa skrzyni">
+      <button id="saveLock">Zapisz tę skrzynię</button>
+    </div>
+    <p class="banner good hidden" id="saveMsg"></p>
+
+    <p>Zapadka stoi gdzie indziej niż w podglądzie? <b>Kliknij właściwy otwór wprost na zamku wyżej</b> — przeliczę sekwencję od nowa, bez cofania się i bez utraty powiązań.</p>
+    <div class="row">
+      <button class="ghost" id="reReadState">Zmień liczbę płytek</button>
+    </div>
+  </section>
+
+  <div class="row">
+    <button class="ghost" id="reset">Nowy zamek</button>
+  </div>
+
+  </main>
+
+  <aside class="library" aria-label="Zapisane skrzynie">
+    <span class="lib-head">Zapisane skrzynie</span>
+    <div class="saved-list" id="savedList"></div>
+    <p class="lib-empty hidden" id="libNote"></p>
+    <p class="lib-empty hidden" id="libEmpty">Pusto. Skrzynię zapiszesz w kroku 3 — zapamiętam jej powiązania <b>i ustawienie zapadek</b>, więc przy powrocie dostaniesz gotową sekwencję bez wpisywania czegokolwiek.</p>
+  </aside>
+  </div>
+
+  <footer>
+    <p><strong>Zanim otworzysz kolejną skrzynię:</strong> wytrenuj otwieranie zamków u Rączki przy arenie w Starym Obozie (10 punktów nauki + 100 bryłek rudy). Wytrych zniesie wtedy 4 wygięcia zamiast 2, złamanie nie resetuje zamka, a same zamki mają mniej powiązań między płytkami — czyli robią się prostsze także dla tego narzędzia.</p>
+    <p><strong>Dlaczego to nie myli kierunków:</strong> nie zakładam, że ruch <b>→</b> przesuwa zapadkę w prawo — bo płytka i zapadka jadą względem siebie przeciwnie i bywa odwrotnie. Liczę wyłącznie w tym, co realnie widzisz: w numerze otworu, w którym siedzi zapadka, i w kierunku, który faktycznie wciskasz. Jeśli gra rysuje ruch lustrzanie, ta odwrotność zostaje zapisana już podczas rozpoznania — i widzisz ją wprost na liście powiązań.</p>
+  </footer>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  var HOLES = 7;
+  var TARGET = 3;          // 0-indexed: 4th hole
+  var MIN_PLATES = 4, MAX_PLATES = 7;
+
+  var S = {
+    stage: "setup",        // setup | probe | solve
+    n: 5,
+    pos: [],               // pin hole index per plate, 0..6
+    E: [],                 // E[i][j] = how pin j moves (-1/0/+1) when you press D on plate i
+    probeIdx: 0,
+    probeDir: 1,           // which way we are asking you to push the plate under test
+    probePrev: [],         // pin layout before the current probe move
+    probeRead: [],         // which pins you have re-read since that move
+    deferred: [],          // plates that are jammed solid right now — come back to them
+    progressed: false,     // has the lock moved since we last gave up on the jammed plates?
+    freeMove: null,        // a safe move on a known plate, to unjam the rest
+    solution: [],          // flat list of {plate, dir}
+    grouped: [],           // display runs
+    runIdx: 0,             // which grouped step (= one row of the list) you are on
+    unsolvable: false,
+    startPos: [],          // pin positions this attempt began from — a chest always resets to these
+    locks: [],             // saved chests: {name, n, E, pos}
+    loadedName: "",        // name of the saved chest currently in play, if any
+    justLoaded: false,     // loaded straight from the library, pins not re-checked yet
+    grindFixes: null,      // a recommended move ground in game: the model must be wrong
+    probeEndPos: [],       // where the probe moves left the lock, if you would rather not reset
+    needsReset: false,     // we assumed you pressed Reset in game and are solving from the start
+    match: null            // saved chest whose starting layout matches what you typed
+  };
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  /* ---------------- persistence ----------------
+     Two separate things get remembered, because they age differently:
+       - the CHESTS you name: plate count + links. Fixed forever for that chest.
+       - the LAST SESSION: whatever you had on screen, so a refresh doesn't wipe it. */
+
+  var LOCKS_KEY = "wytrych-locks-v1";
+  var SESSION_KEY = "wytrych-session-v1";
+
+  function readJSON(key) {
+    try { return JSON.parse(localStorage.getItem(key)); } catch (e) { return null; }
+  }
+  function writeJSON(key, value) {
+    try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* private mode, full disk */ }
+  }
+
+  function linksKnown() {
+    if (!S.E || S.E.length !== S.n) { return false; }
+    for (var i = 0; i < S.n; i++) {
+      if (!S.E[i] || S.E[i].length !== S.n) { return false; }
+    }
+    return true;
+  }
+
+  function persistSession() {
+    writeJSON(SESSION_KEY, {
+      n: S.n,
+      pos: S.pos,
+      startPos: S.startPos,
+      E: linksKnown() ? S.E : null,
+      stage: S.stage === "probe" ? "setup" : S.stage,   // a half-finished probe is worthless
+      loadedName: S.loadedName
+    });
+  }
+
+  function validPins(a, n) {
+    if (!Array.isArray(a) || a.length !== n) { return false; }
+    for (var i = 0; i < n; i++) {
+      if (typeof a[i] !== "number" || a[i] < 0 || a[i] > HOLES - 1) { return false; }
+    }
+    return true;
+  }
+
+  function restoreSession() {
+    var d = readJSON(SESSION_KEY);
+    if (!d || typeof d.n !== "number" || d.n < MIN_PLATES || d.n > MAX_PLATES) { return false; }
+    if (!Array.isArray(d.pos) || d.pos.length !== d.n) { return false; }
+
+    S.n = d.n;
+    S.pos = d.pos.map(function (v) { return clamp(v | 0); });
+    S.startPos = validPins(d.startPos, d.n) ? d.startPos.slice() : S.pos.slice();
+    S.E = Array.isArray(d.E) ? d.E : [];
+    S.loadedName = d.loadedName || "";
+
+    if (d.stage === "solve" && linksKnown()) {
+      // pos already reflects the moves you made, so re-solving picks up where you left off
+      S.stage = "solve";
+      solveAndRender();
+    } else {
+      S.stage = "setup";
+      render();
+    }
+    return true;
+  }
+
+  // Chests recorded before plate 1 was pinned to the bottom carry links indexed from the
+  // other end. Relabelling is a plain reversal: plate i becomes plate n-1-i, in the starting
+  // layout and in both axes of the link matrix.
+  function migrateLocks(list) {
+    var changed = false;
+    var out = list.map(function (L) {
+      if (L.topFirst !== true || !L.E || L.E.length !== L.n) {
+        if (L.topFirst !== undefined) { delete L.topFirst; changed = true; }
+        return L;
+      }
+      var n = L.n, flip = function (i) { return n - 1 - i; };
+      var E = [], pos = null, i, j;
+      for (i = 0; i < n; i++) {
+        var row = [];
+        for (j = 0; j < n; j++) { row.push(L.E[flip(i)][flip(j)]); }
+        E.push(row);
+      }
+      if (validPins(L.pos, n)) {
+        pos = [];
+        for (i = 0; i < n; i++) { pos.push(L.pos[flip(i)]); }
+      }
+      changed = true;
+      return { name: L.name, n: n, E: E, pos: pos, renumbered: true };
+    });
+    if (changed) { writeJSON(LOCKS_KEY, out); }
+    return out;
+  }
+
+  function saveLock(name) {
+    name = (name || "").trim();
+    if (!name || !linksKnown()) { return false; }
+    var copy = S.E.map(function (row) { return row.slice(); });
+    var existing = -1;
+    for (var i = 0; i < S.locks.length; i++) {
+      if (S.locks[i].name.toLowerCase() === name.toLowerCase()) { existing = i; }
+    }
+    // Store the pins this attempt STARTED from, not where they are mid-sequence:
+    // a chest always snaps back to that layout when the pick breaks.
+    var pins = validPins(S.startPos, S.n) ? S.startPos.slice() : S.pos.slice();
+    var entry = { name: name, n: S.n, E: copy, pos: pins };
+    if (existing >= 0) { S.locks[existing] = entry; } else { S.locks.push(entry); }
+    S.loadedName = name;
+    writeJSON(LOCKS_KEY, S.locks);
+    return existing >= 0 ? "updated" : "created";
+  }
+
+  function openLock(idx) {
+    var lock = S.locks[idx];
+    if (!lock) { return; }
+    S.n = lock.n;
+    S.E = lock.E.map(function (row) { return row.slice(); });
+    S.loadedName = lock.name;
+    S.unsolvable = false;
+
+    if (validPins(lock.pos, lock.n)) {
+      // Everything is known — hand over the sequence immediately.
+      S.pos = lock.pos.slice();
+      S.startPos = lock.pos.slice();
+      S.justLoaded = true;
+      S.needsReset = false;
+      S.stage = "solve";
+      solveAndRender();
+    } else {
+      // Saved before pins were remembered: links only, so ask for the pins.
+      S.pos = [];
+      for (var i = 0; i < S.n; i++) { S.pos.push(TARGET); }
+      S.startPos = [];
+      S.justLoaded = false;
+      S.stage = "setup";
+      render();
+    }
+  }
+
+  function deleteLock(idx) {
+    S.locks.splice(idx, 1);
+    writeJSON(LOCKS_KEY, S.locks);
+    render();
+  }
+
+  function renderSaved() {
+    var host = $("savedList");
+    $("libEmpty").classList.toggle("hidden", S.locks.length > 0);
+
+    var moved = S.locks.filter(function (L) { return L.renumbered; });
+    var note = $("libNote");
+    if (moved.length) {
+      note.innerHTML = "Przenumerowałem " + (moved.length === 1 ? "skrzynię" : "skrzynie") +
+        " zapisane pod starą numeracją (jedynka była na górze). Sprawdź przy pierwszym użyciu — " +
+        "jeśli sekwencja nie zagra, usuń i nagraj od nowa.";
+      note.classList.remove("hidden");
+    } else {
+      note.classList.add("hidden");
+    }
+
+    host.innerHTML = "";
+    for (var i = 0; i < S.locks.length; i++) {
+      var lock = S.locks[i];
+      var row = document.createElement("div");
+      row.className = "saved-item";
+
+      var open = document.createElement("button");
+      open.type = "button";
+      open.className = "open";
+      open.setAttribute("aria-pressed", String(lock.name === S.loadedName));
+
+      var nm = document.createElement("span");
+      nm.textContent = lock.name;
+      open.appendChild(nm);
+
+      var meta = document.createElement("span");
+      meta.className = "meta";
+      meta.textContent = lock.n + " płytek" + (validPins(lock.pos, lock.n) ? " · gotowa" : " · bez zapadek");
+      open.appendChild(meta);
+
+      (function (idx) {
+        open.addEventListener("click", function () { openLock(idx); });
+      })(i);
+      row.appendChild(open);
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "del";
+      del.textContent = "×";
+      del.setAttribute("aria-label", "Usuń zapisaną skrzynię " + lock.name);
+      (function (idx) {
+        del.addEventListener("click", function () { deleteLock(idx); });
+      })(i);
+      row.appendChild(del);
+
+      host.appendChild(row);
+    }
+  }
+
+  function renderSetup() {
+    renderPlateCount();
+
+    var known = linksKnown();
+    var banner = $("knownBanner");
+    $("toProbe").textContent = known ? "Policz sekwencję →" : "Zapadki ustawione →";
+    $("reProbe").classList.toggle("hidden", !known);
+
+    if (known) {
+      banner.textContent = S.loadedName
+        ? "Powiązania skrzyni „" + S.loadedName + "” już znam — rozpoznania nie będzie. Wskaż tylko, gdzie teraz stoją zapadki."
+        : "Powiązania tego zamka już znam — rozpoznania nie będzie. Wskaż tylko, gdzie teraz stoją zapadki.";
+      banner.classList.remove("hidden");
+    } else {
+      banner.classList.add("hidden");
+    }
+
+    // Recognise the chest from its starting layout.
+    var mb = $("matchBanner"), load = $("loadMatch");
+    var m = known ? null : matchSaved();
+    S.match = m;
+    if (!m) {
+      mb.classList.add("hidden");
+      load.classList.add("hidden");
+      return;
+    }
+    var name = S.locks[m.idx].name;
+    if (m.mirrored) {
+      mb.innerHTML = "Ten układ zapadek pasuje do zapisanej skrzyni „<b>" + name + "</b>”, ale <b>w odwrotnej kolejności</b>. " +
+        "Najpewniej numerujesz teraz płytki z drugiej strony niż wtedy — przełącz „która płytka to numer 1” wyżej, a układ się zgra.";
+      load.classList.add("hidden");
+    } else {
+      mb.innerHTML = "To wygląda na zapisaną skrzynię „<b>" + name + "</b>” — układ zapadek zgadza się co do otworu. Mogę wziąć jej powiązania z pamięci i pominąć rozpoznanie.";
+      load.classList.remove("hidden");
+    }
+    mb.classList.remove("hidden");
+  }
+
+  /* ---------------- lock rendering ---------------- */
+
+  // Plate 1 is the nearest plate — the one the cursor lands on after every reset —
+  // so it is drawn at the BOTTOM, with the rest stacked above it.
+  function displayOrder() {
+    var order = [];
+    for (var i = S.n - 1; i >= 0; i--) { order.push(i); }
+    return order;
+  }
+
+  function renderPlates() {
+    var host = $("plates");
+    host.innerHTML = "";
+    var focus = (S.stage === "probe") ? S.probeIdx
+              : (S.stage === "solve" && S.runIdx < S.grouped.length) ? S.grouped[S.runIdx].plate
+              : -1;
+
+    var order = displayOrder();
+    for (var oi = 0; oi < order.length; oi++) {
+      var i = order[oi];
+      var unread = (S.stage === "probe" && !S.probeRead[i]);
+      var row = document.createElement("div");
+      row.className = "plate" + (i === focus ? " is-focus" : "") + (unread ? " unread" : "");
+
+      var name = document.createElement("span");
+      name.className = "plate-name";
+      name.textContent = String(i + 1);
+      name.setAttribute("aria-label", "Płytka " + (i + 1));
+      row.appendChild(name);
+
+      var holes = document.createElement("div");
+      holes.className = "holes";
+      for (var h = 0; h < HOLES; h++) {
+        var b = document.createElement("button");
+        b.type = "button";
+        b.className = "hole" + (h === TARGET ? " is-center" : "");
+        b.setAttribute("aria-label", "Płytka " + (i + 1) + ", otwór " + (h + 1));
+        if (S.pos[i] === h) {
+          var pin = document.createElement("span");
+          pin.className = "pin" + (unread ? " unread" : "");
+          b.appendChild(pin);
+        }
+        (function (pi, ph) {
+          b.addEventListener("click", function () { setPin(pi, ph); });
+        })(i, h);
+        holes.appendChild(b);
+      }
+      row.appendChild(holes);
+      host.appendChild(row);
+    }
+
+    $("lock").classList.toggle("is-pickable", true);
+
+    var done = 0;
+    for (var k = 0; k < S.n; k++) { if (S.pos[k] === TARGET) done++; }
+    $("doneCount").textContent = done;
+    $("totalCount").textContent = S.n;
+    $("lockHint").textContent = S.stage === "setup" ? "Ustaw zapadki" :
+                                S.stage === "probe" ? "Rozpoznanie" : "Otwieranie";
+    $("lockStatus").textContent =
+      done === S.n ? "Zamek otwarty." :
+      S.stage === "setup" ? "Kliknij otwór, w którym zapadka siedzi TERAZ." :
+      S.stage === "probe" ? "Odczytaj zamek: kliknij otwór każdej zapadki." :
+      (S.runIdx === 0 ? "Pozycja wyjściowa — stąd liczę sekwencję." :
+        "Po " + S.runIdx + " " + plStep(S.runIdx) + " sekwencji.");
+  }
+
+  function setPin(plate, hole) {
+    if (S.stage === "probe") { readPin(plate, hole); return; }
+
+    S.pos[plate] = hole;
+
+    if (S.stage === "solve") {
+      // Correcting before the first move means we misread the chest's resting layout,
+      // so that's what gets remembered. Correcting mid-sequence does not — by then
+      // the pins have legitimately moved.
+      if (S.runIdx === 0) { S.startPos = S.pos.slice(); }
+      S.justLoaded = false;
+      solveAndRender();
+      return;
+    }
+    render();
+  }
+
+  /* ---------------- step 1: setup ---------------- */
+
+  function renderPlateCount() {
+    var host = $("plateCount");
+    host.innerHTML = "";
+    for (var n = MIN_PLATES; n <= MAX_PLATES; n++) {
+      var b = document.createElement("button");
+      b.type = "button";
+      b.textContent = n;
+      b.setAttribute("aria-pressed", String(n === S.n));
+      (function (v) {
+        b.addEventListener("click", function () { setPlateCount(v); });
+      })(n);
+      host.appendChild(b);
+    }
+  }
+
+  // Does what you just typed look like a chest you already know?
+  // Same trick gothicsolve pulls: the starting layout is a fingerprint.
+  function matchSaved() {
+    if (!validPins(S.pos, S.n)) { return null; }
+    for (var i = 0; i < S.locks.length; i++) {
+      var L = S.locks[i];
+      if (L.n !== S.n || !validPins(L.pos, L.n)) { continue; }
+      var exact = true, mirrored = true;
+      for (var j = 0; j < S.n; j++) {
+        if (L.pos[j] !== S.pos[j]) { exact = false; }
+        if (L.pos[j] !== S.pos[S.n - 1 - j]) { mirrored = false; }
+      }
+      if (exact) { return { idx: i, mirrored: false }; }
+      if (mirrored) { return { idx: i, mirrored: true }; }
+    }
+    return null;
+  }
+
+  function setPlateCount(n) {
+    if (n !== S.n) {
+      // A different lock size invalidates anything we learned about the old one.
+      S.E = [];
+      S.loadedName = "";
+      S.unsolvable = false;
+    }
+    S.n = n;
+    S.pos = [];
+    for (var i = 0; i < n; i++) { S.pos.push(TARGET); }
+    render();
+  }
+
+  /* ---------------- step 2: probe ----------------
+     Two things this has to survive:
+     (1) People cannot reliably spot a one-hole twitch on a plate they are not looking at,
+         so we never ask "which pins moved" — we ask you to READ the lock, every pin, every
+         time, and we work the directions out ourselves.
+     (2) A plate can be jammed solid in the starting layout: both directions would drive some
+         pin through an edge. So the order is not fixed. Skip it, probe others — their moves
+         shift the lock — and come back. If everything left is jammed, we ask for one safe
+         freeing move on a plate we already understand. */
+
+  function startProbe() {
+    S.stage = "probe";
+    S.E = [];
+    S.deferred = [];
+    for (var i = 0; i < S.n; i++) { S.E.push(null); S.deferred.push(false); }
+    S.progressed = false;
+    S.freeMove = null;
+    S.probeDir = 1;
+    nextPlate();
+    render();
+  }
+
+  function knownPlates() {
+    var k = 0;
+    for (var i = 0; i < S.n; i++) { if (S.E[i]) { k++; } }
+    return k;
+  }
+
+  // Pick the next plate to work on, or set up a freeing move, or finish.
+  function nextPlate() {
+    var i;
+    for (i = 0; i < S.n; i++) {
+      if (!S.E[i] && !S.deferred[i]) {
+        S.probeIdx = i;
+        S.probeDir = 1;
+        S.freeMove = null;
+        beginProbeRound();
+        return;
+      }
+    }
+    if (knownPlates() === S.n) { finishProbe(); return; }
+
+    // Everything left is jammed. If the lock has moved since we last gave up on them,
+    // they may well be free now — go round again.
+    if (S.progressed) {
+      S.progressed = false;
+      for (i = 0; i < S.n; i++) { S.deferred[i] = false; }
+      nextPlate();
+      return;
+    }
+
+    // Nothing has moved and everything left is stuck: we need to shift the lock ourselves,
+    // using a plate we already understand, so the move is predictable and safe.
+    S.freeMove = pickFreeingMove();
+    S.probeIdx = -1;
+    beginProbeRound();
+  }
+
+  // A legal move on an already-known plate that pulls the pins as far from the edges as
+  // possible — that is what buys room for the jammed plates.
+  function pickFreeingMove() {
+    var best = null, p, d, j;
+    for (p = 0; p < S.n; p++) {
+      if (!S.E[p]) { continue; }
+      for (d = -1; d <= 1; d += 2) {
+        var pos = [], ok = true;
+        for (j = 0; j < S.n; j++) {
+          var np = S.pos[j] + d * S.E[p][j];
+          if (np < 0 || np > HOLES - 1) { ok = false; break; }
+          pos.push(np);
+        }
+        if (!ok) { continue; }
+        var room = HOLES;
+        for (j = 0; j < S.n; j++) { room = Math.min(room, Math.min(pos[j], HOLES - 1 - pos[j])); }
+        if (!best || room > best.room) { best = { plate: p, dir: d, room: room }; }
+      }
+    }
+    return best;
+  }
+
+  function beginProbeRound() {
+    S.probePrev = S.pos.slice();
+    S.probeRead = [];
+    for (var i = 0; i < S.n; i++) { S.probeRead.push(false); }
+    $("probeError").classList.add("hidden");
+  }
+
+  function readPin(plate, hole) {
+    S.pos[plate] = hole;
+    S.probeRead[plate] = true;
+    render();
+  }
+
+  function readCount() {
+    var c = 0;
+    for (var i = 0; i < S.n; i++) { if (S.probeRead[i]) { c++; } }
+    return c;
+  }
+
+  function renderProbe() {
+    var arrow = S.probeDir === 1 ? "→" : "←";
+    var word = S.probeDir === 1 ? "w prawo" : "w lewo";
+    var free = S.freeMove;
+
+    if (free) {
+      arrow = free.dir === 1 ? "→" : "←";
+      word = free.dir === 1 ? "w prawo" : "w lewo";
+      $("probeTag").textContent = "Krok 2 — rozpoznanie · ruch uwalniający";
+      $("probeTitle").innerHTML = "Płytka " + (free.plate + 1) + ": przesuń <span class=\"keycap\">" +
+        arrow + "</span> (" + word + ") raz";
+    } else {
+      $("probeTag").textContent = "Krok 2 — rozpoznanie · poznane " + knownPlates() + " z " + S.n;
+      $("probeTitle").innerHTML = "Płytka " + (S.probeIdx + 1) + ": przesuń <span class=\"keycap\">" +
+        arrow + "</span> (" + word + ") raz";
+    }
+
+    $("freeNote").classList.toggle("hidden", !free);
+    if (free) {
+      $("freeNote").innerHTML = "Pozostałe płytki są w tym układzie zablokowane — żadna nie " +
+        "ruszy się ani w lewo, ani w prawo. Płytkę " + (free.plate + 1) + " już znam, więc wiem, " +
+        "że ten ruch jest bezpieczny: odsunie zapadki od krawędzi i zrobi im miejsce. " +
+        "Zrób go i odczytaj zamek — potem wrócimy do reszty.";
+    }
+
+    var skip = $("probeSkip");
+    skip.classList.toggle("hidden", !!free);
+    skip.textContent = "Nie da się ruszyć w żadną stronę — pomiń tę płytkę";
+
+    var done = readCount();
+    $("probeCount").innerHTML = done === S.n
+      ? "Wszystkie " + S.n + " zapadek odczytane. Możesz iść dalej."
+      : "Odczytane: <b>" + done + " z " + S.n + "</b>. Kliknij na zamku wyżej otwór każdej " +
+        "zapadki, której jeszcze nie potwierdziłeś — te blade to właśnie one.";
+    $("probeConfirm").disabled = (done !== S.n);
+  }
+
+  function confirmProbe() {
+    var err = $("probeError");
+    var delta = [], j;
+    for (j = 0; j < S.n; j++) { delta.push(S.pos[j] - S.probePrev[j]); }
+
+    for (j = 0; j < S.n; j++) {
+      if (delta[j] < -1 || delta[j] > 1) {
+        err.innerHTML = "Zapadka <b>" + (j + 1) + "</b> nie mogła przeskoczyć " +
+          Math.abs(delta[j]) + " otworów jednym ruchem — jeden ruch to najwyżej jeden otwór. " +
+          "Odczytaj ją jeszcze raz.";
+        err.classList.remove("hidden");
+        return;
+      }
+    }
+
+    if (S.freeMove) {
+      // We already know this plate, so the reading is a free correctness check on it.
+      var fm = S.freeMove;
+      for (j = 0; j < S.n; j++) {
+        if (delta[j] !== fm.dir * S.E[fm.plate][j]) {
+          err.innerHTML = "To nie zgadza się z tym, co wiem o płytce <b>" + (fm.plate + 1) +
+            "</b>: zapadka <b>" + (j + 1) + "</b> zachowała się inaczej, niż zapisałem. " +
+            "Albo odczyt jest pomylony, albo to powiązanie mam źle. Sprawdź zamek jeszcze raz.";
+          err.classList.remove("hidden");
+          return;
+        }
+      }
+      err.classList.add("hidden");
+      S.progressed = true;                 // the lock moved: jammed plates may be free now
+      for (j = 0; j < S.n; j++) { S.deferred[j] = false; }
+      nextPlate();
+      render();
+      return;
+    }
+
+    if (delta[S.probeIdx] === 0) {
+      err.innerHTML = "Zapadka <b>" + (S.probeIdx + 1) + "</b> należy do płytki, którą właśnie " +
+        "przesunąłeś — musiała się ruszyć. Jeśli w grze nic nie drgnęło i usłyszałeś zgrzyt, " +
+        "użyj przycisku „Zgrzyt”.";
+      err.classList.remove("hidden");
+      return;
+    }
+    err.classList.add("hidden");
+
+    // A link row is always written as the effect of a RIGHT move, so flip it if you went left.
+    var vec = [];
+    for (j = 0; j < S.n; j++) { vec.push(S.probeDir * delta[j]); }
+    S.E[S.probeIdx] = vec;
+    S.progressed = true;
+
+    nextPlate();
+    render();
+  }
+
+  // The move ground: it would drive some pin through an edge. Try the other way.
+  function jamProbe() {
+    var err = $("probeError");
+    if (S.freeMove) {
+      err.innerHTML = "Ten ruch powinien być bezpieczny — jeśli zgrzytnął, to któreś " +
+        "powiązanie mam źle. Wciśnij Reset i zrób rozpoznanie od nowa.";
+      err.classList.remove("hidden");
+      return;
+    }
+    if (S.probeDir === -1) {
+      err.innerHTML = "Obie strony zgrzytają — ta płytka jest w tym układzie zablokowana. " +
+        "Pomiń ją: inne ruchy przesuną zamek i wrócimy do niej, gdy będzie miała miejsce.";
+      err.classList.remove("hidden");
+      return;
+    }
+    S.probeDir = -1;
+    S.pos = S.probePrev.slice();          // nothing moved
+    beginProbeRound();
+    err.innerHTML = "Jasne — ten ruch wypchnąłby którąś zapadkę poza krawędź. " +
+      "Przesuń tę samą płytkę <b>w lewo (←)</b> i odczytaj zamek.";
+    err.classList.remove("hidden");
+    render();
+  }
+
+  function skipPlate() {
+    S.deferred[S.probeIdx] = true;
+    S.pos = S.probePrev.slice();
+    nextPlate();
+    render();
+  }
+
+  function clamp(v) { return v < 0 ? 0 : (v > HOLES - 1 ? HOLES - 1 : v); }
+
+  function finishProbe() {
+    // The probe moves genuinely shoved the lock around. Rather than solving from that mess —
+    // and carrying every observation error into the starting position — we lean on the game's
+    // own Reset, which puts the chest back exactly where you found it. That layout we already
+    // know for certain: it is what you typed in step 1.
+    S.probeEndPos = S.pos.slice();
+    S.pos = S.startPos.slice();
+    S.needsReset = true;
+    S.stage = "solve";
+    solveAndRender();
+  }
+
+  /* ---------------- solver: BFS over the whole lock ---------------- */
+
+  function solve(n, start, E) {
+    var pow = [1];
+    for (var i = 1; i <= n; i++) { pow[i] = pow[i - 1] * HOLES; }
+    var total = pow[n];
+
+    var startIdx = 0, goalIdx = 0;
+    for (var k = 0; k < n; k++) {
+      startIdx += start[k] * pow[k];
+      goalIdx  += TARGET   * pow[k];
+    }
+    if (startIdx === goalIdx) { return []; }
+
+    // move id: plate * 2 + (0 => A / -1, 1 => D / +1)
+    var moveCount = n * 2;
+    var delta = new Int32Array(moveCount);
+    for (var p = 0; p < n; p++) {
+      var d = 0;
+      for (var j = 0; j < n; j++) { d += E[p][j] * pow[j]; }
+      delta[p * 2 + 1] = d;
+      delta[p * 2] = -d;
+    }
+
+    var prev = new Int32Array(total).fill(-1);
+    var pmove = new Int8Array(total).fill(-1);
+    var queue = new Int32Array(total);
+    var head = 0, tail = 0;
+    queue[tail++] = startIdx;
+    prev[startIdx] = startIdx;
+
+    var digits = new Int8Array(n);
+    var found = false;
+
+    while (head < tail) {
+      var cur = queue[head++];
+      if (cur === goalIdx) { found = true; break; }
+
+      var rest = cur;
+      for (var q = 0; q < n; q++) { digits[q] = rest % HOLES; rest = (rest / HOLES) | 0; }
+
+      for (var m = 0; m < moveCount; m++) {
+        var plate = m >> 1;
+        var dir = (m & 1) ? 1 : -1;
+        var legal = true;
+        for (var t = 0; t < n; t++) {
+          var e = E[plate][t];
+          if (e === 0) { continue; }
+          var np = digits[t] + dir * e;
+          if (np < 0 || np > HOLES - 1) { legal = false; break; }
+        }
+        if (!legal) { continue; }
+
+        var nxt = cur + delta[m];
+        if (prev[nxt] !== -1) { continue; }
+        prev[nxt] = cur;
+        pmove[nxt] = m;
+        queue[tail++] = nxt;
+      }
+    }
+
+    if (!found && prev[goalIdx] === -1) { return null; }
+
+    var path = [];
+    var node = goalIdx;
+    while (node !== startIdx) {
+      var mv = pmove[node];
+      path.push({ plate: mv >> 1, dir: (mv & 1) ? 1 : -1 });
+      node = prev[node];
+    }
+    path.reverse();
+    return path;
+  }
+
+  function groupMoves(path) {
+    var out = [];
+    for (var i = 0; i < path.length; i++) {
+      var last = out[out.length - 1];
+      if (last && last.plate === path[i].plate && last.dir === path[i].dir) {
+        last.count++;
+        last.end = i;
+      } else {
+        out.push({ plate: path[i].plate, dir: path[i].dir, count: 1, start: i, end: i });
+      }
+    }
+    return out;
+  }
+
+  function solveAndRender() {
+    S.grindFixes = null;
+    var path = solve(S.n, S.pos, S.E);
+    S.unsolvable = (path === null);
+    S.solution = path || [];
+    S.grouped = path ? groupMoves(path) : [];
+    S.runIdx = 0;
+    render();
+  }
+
+  function plural(k, one, few, many) {
+    if (k === 1) { return one; }
+    var last = k % 10, tens = k % 100;
+    if (last >= 2 && last <= 4 && !(tens >= 12 && tens <= 14)) { return few; }
+    return many;
+  }
+  var plPress = function (k) { return plural(k, "naciśnięcie", "naciśnięcia", "naciśnięć"); };
+  var plStep  = function (k) { return plural(k, "krok", "kroki", "kroków"); };
+
+  function renderSolve() {
+    var ok = $("solveOk"), bad = $("solveBad"), list = $("moves"),
+        panel = $("nowPanel"), box = $("upcomingBox");
+
+    if (S.unsolvable) {
+      bad.innerHTML = "Z tego układu nie ma drogi do środka bez uderzenia o krawędź — a prawdziwa skrzynia zawsze ją ma. " +
+        "Czyli jedna obserwacja się nie zgadza. <b>Nie poprawiaj tego na oko:</b> jeśli pomyłka siedzi w powiązaniu, " +
+        "samo przestawienie zapadki da sekwencję, która wygnie Ci wytrych.";
+      bad.classList.remove("hidden");
+      ok.classList.add("hidden");
+      panel.classList.add("hidden");
+      box.classList.add("hidden");
+      $("loadedNote").classList.add("hidden");
+      $("resetNote").classList.toggle("hidden", !S.needsReset);
+      $("solveTitle").textContent = "Coś się nie zgadza";
+      $("stepDone").disabled = true;
+      $("stepBack").disabled = true;
+      renderFixes(diagnose(), "Jedna obserwacja się nie zgadza.");
+      return;
+    }
+    bad.classList.add("hidden");
+
+    if (S.grindFixes) {
+      if (S.runIdx !== 0) {
+        // Past step 0 the app's picture of the lock is itself built on the bad links,
+        // so it is not evidence. Get back to the one state we both know for sure.
+        bad.innerHTML = "Zgrzyt znaczy, że któreś powiązanie zapisałem źle. Ale jesteś już " +
+          "<b>" + S.runIdx + " " + plStep(S.runIdx) + " od startu</b>, a skoro powiązania " +
+          "kłamią, to i moje wyobrażenie o tym, gdzie stoją teraz zapadki, jest niepewne — " +
+          "nie mam z czego wnioskować. <b>Wciśnij Reset w grze i „Wróć do pozycji startowej” " +
+          "u mnie</b>, potem powtórz pierwszy krok. Jeśli zgrzytnie tam, wskażę winowajcę " +
+          "dokładnie.";
+        bad.classList.remove("hidden");
+        $("fixList").classList.add("hidden");
+      } else if (S.grindFixes.length) {
+        bad.innerHTML = "Zgrzyt na pierwszym kroku, z pozycji, którą oboje znamy na pewno. " +
+          "To twardy dowód: <b>któreś powiązanie zapisałem z odwrotnym znakiem</b> — i to ono, " +
+          "nie pozycja zapadki.";
+        bad.classList.remove("hidden");
+        renderFixes(S.grindFixes, "Ten ruch nie miał prawa przejść.");
+      } else {
+        bad.innerHTML = "Zgrzyt na pierwszym kroku, a <b>żadna pojedyncza poprawka tego nie " +
+          "tłumaczy</b> — czyli w rozpoznaniu jest więcej niż jedna pomyłka. Wciśnij Reset " +
+          "i zrób rozpoznanie od nowa; teraz po każdym ruchu odczytujesz wszystkie zapadki, " +
+          "więc ta klasa błędów już nie przejdzie.";
+        bad.classList.remove("hidden");
+        $("fixList").classList.add("hidden");
+      }
+    } else {
+      $("fixList").classList.add("hidden");
+    }
+
+    var total = S.grouped.length;
+
+    // Finished — either we stepped through everything, or the lock was already open.
+    if (S.runIdx >= total) {
+      ok.textContent = "Wszystkie zapadki na środku — zamek stoi otworem.";
+      ok.classList.remove("hidden");
+      panel.classList.add("hidden");
+      box.classList.add("hidden");
+      $("solveTitle").textContent = "Otwarte";
+      $("stepDone").disabled = true;
+      $("stepBack").disabled = (S.runIdx === 0);
+      return;
+    }
+    ok.classList.add("hidden");
+    panel.classList.remove("hidden");
+    box.classList.remove("hidden");
+
+    $("resetNote").classList.toggle("hidden", !S.needsReset);
+
+    var note = $("loadedNote");
+    if (S.justLoaded && S.loadedName) {
+      note.innerHTML = "Wczytałem „" + S.loadedName + "” — powiązania <b>i</b> ustawienie zapadek wziąłem z pamięci, więc sekwencja jest gotowa od razu. " +
+        "Rzuć okiem na podgląd zamka wyżej: jeśli w grze zapadki stoją inaczej, kliknij „Coś się nie zgadza” na dole.";
+      note.classList.remove("hidden");
+    } else {
+      note.classList.add("hidden");
+    }
+
+    var run = S.grouped[S.runIdx];
+    var key = run.dir === 1 ? "→" : "←";
+    var word = run.dir === 1 ? "w prawo" : "w lewo";
+
+    $("solveTitle").textContent = "Krok " + (S.runIdx + 1) + " z " + total;
+
+    $("nowPlate").textContent = "Płytka " + (run.plate + 1);
+    $("nowWhere").textContent = "Podświetliłem ją w podglądzie zamka wyżej.";
+
+    // The count is shown as literal keycaps, so "x4" can't be misread.
+    var keys = $("nowKeys");
+    keys.innerHTML = "";
+    for (var c = 0; c < run.count; c++) {
+      var k = document.createElement("span");
+      k.className = "key-big";
+      k.textContent = key;
+      keys.appendChild(k);
+    }
+    $("nowCount").innerHTML = "Przesuń <b>" + word + "</b> " + run.count + " " +
+      (run.count === 1 ? "raz" : "razy") + ", potem kliknij „Zrobione”.";
+
+    // Everything still ahead — no step numbers, so nothing collides with the plate number.
+    var pressesLeft = 0;
+    list.innerHTML = "";
+    for (var g = S.runIdx + 1; g < total; g++) {
+      var r = S.grouped[g];
+      pressesLeft += r.count;
+      var li = document.createElement("li");
+
+      var name = document.createElement("span");
+      name.textContent = "Płytka " + (r.plate + 1);
+      li.appendChild(name);
+
+      var cap = document.createElement("span");
+      cap.className = "keycap";
+      cap.textContent = r.dir === 1 ? "→" : "←";
+      li.appendChild(cap);
+
+      var cnt = document.createElement("span");
+      cnt.className = "mv-count";
+      cnt.textContent = r.count + (r.count === 1 ? " raz" : " razy");
+      li.appendChild(cnt);
+
+      list.appendChild(li);
+    }
+
+    if (pressesLeft === 0) {
+      $("upcomingHead").textContent = "To ostatni krok.";
+      list.classList.add("hidden");
+    } else {
+      list.classList.remove("hidden");
+      $("upcomingHead").textContent = "Potem, w tej kolejności — jeszcze " +
+        pressesLeft + " " + plPress(pressesLeft);
+    }
+
+    $("stepDone").disabled = false;
+    $("stepBack").disabled = (S.runIdx === 0);
+    $("grind").disabled = false;
+  }
+
+  function allCentered() {
+    for (var i = 0; i < S.n; i++) { if (S.pos[i] !== TARGET) { return false; } }
+    return true;
+  }
+
+  function applyRun(run, sign) {
+    for (var c = 0; c < run.count; c++) {
+      for (var j = 0; j < S.n; j++) {
+        S.pos[j] = clamp(S.pos[j] + sign * run.dir * S.E[run.plate][j]);
+      }
+    }
+  }
+
+  function stepDone() {
+    if (S.runIdx >= S.grouped.length) { return; }
+    S.justLoaded = false;
+    S.needsReset = false;
+    S.grindFixes = null;
+    applyRun(S.grouped[S.runIdx], 1);
+    S.runIdx++;
+    render();
+  }
+
+  function stepBack() {
+    if (S.runIdx === 0) { return; }
+    S.runIdx--;
+    applyRun(S.grouped[S.runIdx], -1);
+    render();
+  }
+
+  /* ---------------- when there is no way out, find the misread ----------------
+     A dead end is almost always ONE wrong observation. Two things can be wrong, and they
+     are not equally harmless: a misread starting pin only shifts the start, but a misread
+     LINK also makes every future move mispredict the lock — so correcting pins by hand
+     (which is what you would otherwise do) leaves a sequence that can still bend the pick.
+     So we look for both, and we look for the link first. */
+
+  function inRange(pos) {
+    for (var i = 0; i < pos.length; i++) {
+      if (pos[i] < 0 || pos[i] > HOLES - 1) { return false; }
+    }
+    return true;
+  }
+
+  function copyE(E) {
+    return E.map(function (row) { return row.slice(); });
+  }
+
+  function diagnose() {
+    var out = [];
+    var p, j, i, d, v, path;
+
+    // (a) one link entry recorded wrong — the dangerous kind
+    {
+      for (p = 0; p < S.n; p++) {
+        for (j = 0; j < S.n; j++) {
+          for (v = -1; v <= 1; v++) {
+            if (v === S.E[p][j]) { continue; }
+            if (p === j && v === 0) { continue; }      // the plate you move always moves
+            var E2 = copyE(S.E);
+            E2[p][j] = v;
+            var pos2 = S.pos.slice();                  // the lock is where you can see it
+            path = solve(S.n, pos2, E2);
+            if (path) {
+              // Rank by how likely the mistake is. Failing to NOTICE a far pin twitch is the
+              // common one; claiming a twitch that never happened is rare, because you had to
+              // click for it. A backwards direction sits in between.
+              var likelihood = (S.E[p][j] === 0) ? 1.0 : (v === 0 ? 1.6 : 1.3);
+              out.push({ kind: "link", rank: likelihood, p: p, j: j, from: S.E[p][j], to: v,
+                         E: E2, pos: pos2, len: path.length });
+            }
+          }
+        }
+      }
+    }
+
+    // (b) one pin read off by a hole or two
+    var base = S.pos;
+    for (i = 0; i < S.n; i++) {
+      for (d = -2; d <= 2; d++) {
+        if (d === 0) { continue; }
+        var pos3 = base.slice();
+        pos3[i] += d;
+        if (pos3[i] < 0 || pos3[i] > HOLES - 1) { continue; }
+        path = solve(S.n, pos3, S.E);
+        if (path) {
+          out.push({ kind: "pin", rank: 2 + Math.abs(d), i: i, from: base[i], to: pos3[i],
+                     startPos: pos3.slice(), pos: pos3, len: path.length });
+        }
+      }
+    }
+
+    out.sort(function (a, b) { return a.rank - b.rank || a.len - b.len; });
+    return out.slice(0, 6);
+  }
+
+  /* A recommended move that GRINDS is hard evidence: our model says the move is safe, the
+     game says it drives a pin through an edge. That is a strong constraint — we can look for
+     the single link that, if corrected, would have made this very move illegal. */
+  function diagnoseGrind() {
+    var run = S.grouped[S.runIdx];
+    if (!run || S.runIdx !== 0) { return []; }
+
+    var out = [], p, j, v, t;
+    for (p = 0; p < S.n; p++) {
+      for (j = 0; j < S.n; j++) {
+        for (v = -1; v <= 1; v++) {
+          if (v === S.E[p][j]) { continue; }
+          if (p === j && v === 0) { continue; }
+
+          var E2 = copyE(S.E);
+          E2[p][j] = v;
+
+          // the move you just tried must come out ILLEGAL under the corrected links
+          var illegal = false;
+          for (t = 0; t < S.n; t++) {
+            var np = S.pos[t] + run.dir * E2[run.plate][t];
+            if (np < 0 || np > HOLES - 1) { illegal = true; break; }
+          }
+          if (!illegal) { continue; }
+
+          var path = solve(S.n, S.pos, E2);
+          if (!path) { continue; }
+
+          out.push({ kind: "link", rank: (S.E[p][j] === 0) ? 1.0 : (v === 0 ? 1.6 : 1.3),
+                     p: p, j: j, from: S.E[p][j], to: v,
+                     E: E2, pos: S.pos.slice(), len: path.length });
+        }
+      }
+    }
+    out.sort(function (a, b) { return a.rank - b.rank || a.len - b.len; });
+    return out.slice(0, 6);
+  }
+
+  function applyFix(fix) {
+    S.grindFixes = null;
+    if (fix.kind === "link") {
+      S.E = fix.E;
+    } else {
+      S.startPos = fix.startPos;
+    }
+    S.pos = fix.pos.slice();
+    S.justLoaded = false;
+    solveAndRender();
+  }
+
+  function moveWord(v) {
+    return v === 1 ? "poszła w prawo" : (v === -1 ? "poszła w lewo" : "nie ruszyła się");
+  }
+
+  function renderFixes(fixes, headline) {
+    var host = $("fixList");
+    host.innerHTML = "";
+    host.classList.toggle("hidden", fixes.length === 0);
+    if (!fixes.length) { return; }
+
+    var head = document.createElement("div");
+    head.className = "link-row solo";
+    head.innerHTML = headline + (fixes.length === 1
+      ? " Jedno wytłumaczenie pasuje — sprawdź je w grze:"
+      : " Pasuje kilka wytłumaczeń i z samych danych nie da się wybrać właściwego — " +
+        "<b>sprawdź je w grze</b>, zaczynając od góry.");
+    host.appendChild(head);
+
+    for (var k = 0; k < fixes.length; k++) {
+      var f = fixes[k];
+      var row = document.createElement("div");
+      row.className = "link-row";
+
+      var text = document.createElement("div");
+      if (f.kind === "link") {
+        text.innerHTML = "Rusz w grze <b>płytkę " + (f.p + 1) + "</b> i popatrz na <b>zapadkę " +
+          (f.j + 1) + "</b>. Jeśli ona <b>" + moveWord(f.to) + "</b> — a zaznaczyłeś, że " +
+          moveWord(f.from) + " — to jest ta pomyłka.";
+      } else {
+        text.innerHTML = "Sprawdź <b>zapadkę " + (f.i + 1) + "</b> na ekranie gry. Jeśli siedzi w otworze <b>" +
+          (f.to + 1) + "</b>, a nie w " + (f.from + 1) + ", to jest ta pomyłka.";
+      }
+      row.appendChild(text);
+
+      var b = document.createElement("button");
+      b.type = "button";
+      b.style.marginTop = "8px";
+      b.textContent = "Zgadza się — popraw (zamek w " + f.len + " " + plPress(f.len) + ")";
+      (function (fix) {
+        b.addEventListener("click", function () { applyFix(fix); });
+      })(f);
+      row.appendChild(b);
+
+      host.appendChild(row);
+    }
+  }
+
+  /* ---------------- links, in words ---------------- */
+
+  function renderLinkList(hostId) {
+    var host = $(hostId);
+    host.innerHTML = "";
+
+    for (var i = 0; i < S.n; i++) {
+      if (!S.E[i]) { continue; }
+      var self = S.E[i][i];                       // which way D pushes this plate's own pin
+      var pulls = [];
+      for (var j = 0; j < S.n; j++) {
+        if (j === i || S.E[i][j] === 0) { continue; }
+        pulls.push({ j: j, same: S.E[i][j] === self });
+      }
+
+      var row = document.createElement("div");
+      row.className = "link-row" + (pulls.length === 0 ? " solo" : "");
+
+      var html = "<b>Płytka " + (i + 1) + "</b> — ruch <b>→</b> przesuwa jej zapadkę w " +
+        (self === 1 ? "prawo" : "lewo") + ". ";
+
+      if (pulls.length === 0) {
+        html += "Nie rusza żadnej innej zapadki.";
+      } else {
+        var parts = [];
+        for (var k = 0; k < pulls.length; k++) {
+          parts.push("zapadkę <b>" + (pulls[k].j + 1) + "</b> " +
+            (pulls[k].same ? "<span class=\"same\">w tę samą stronę</span>"
+                           : "<span class=\"opp\">w przeciwną</span>"));
+        }
+        html += "Ciągnie za sobą " + parts.join(", ") + ".";
+      }
+
+      row.innerHTML = html;
+      host.appendChild(row);
+    }
+  }
+
+  /* ---------------- links matrix ---------------- */
+
+  function renderMatrix() {
+    var t = $("matrix");
+    t.innerHTML = "";
+
+    var thead = document.createElement("tr");
+    var corner = document.createElement("th");
+    corner.textContent = "→ na";
+    thead.appendChild(corner);
+    for (var c = 0; c < S.n; c++) {
+      var th = document.createElement("th");
+      th.textContent = "zap. " + (c + 1);
+      thead.appendChild(th);
+    }
+    t.appendChild(thead);
+
+    for (var i = 0; i < S.n; i++) {
+      var tr = document.createElement("tr");
+      var rh = document.createElement("th");
+      rh.textContent = "płytka " + (i + 1);
+      tr.appendChild(rh);
+      for (var j = 0; j < S.n; j++) {
+        var td = document.createElement("td");
+        var v = S.E[i][j];
+        td.textContent = v === 1 ? "→" : (v === -1 ? "←" : "·");
+        td.className = v === 1 ? "same" : (v === -1 ? "opp" : "");
+        td.style.cursor = "pointer";
+        (function (pi, pj) {
+          td.addEventListener("click", function () {
+            var cur = S.E[pi][pj];
+            S.E[pi][pj] = cur === 1 ? -1 : (cur === -1 ? 0 : 1);
+            if (pi === pj && S.E[pi][pj] === 0) { S.E[pi][pj] = 1; } // a plate always moves itself
+            solveAndRender();
+          });
+        })(i, j);
+        tr.appendChild(td);
+      }
+      t.appendChild(tr);
+    }
+  }
+
+  // In this game a coupling is normally MUTUAL: if moving plate A drags pin B, then moving
+  // plate B drags pin A back (same way or opposite — but both ways). A one-sided link is
+  // therefore a smell: far more often a missed reading than a genuinely odd chest.
+  function oneSidedPairs() {
+    var out = [];
+    if (!linksKnown()) { return out; }
+    for (var a = 0; a < S.n; a++) {
+      for (var b = a + 1; b < S.n; b++) {
+        var ab = S.E[a][b] !== 0, ba = S.E[b][a] !== 0;
+        if (ab !== ba) { out.push(ab ? { from: a, to: b } : { from: b, to: a }); }
+      }
+    }
+    return out;
+  }
+
+  function renderLinks() {
+    var known = 0;
+    for (var i = 0; i < S.n; i++) { if (S.E[i]) { known++; } }
+    $("cardLinks").classList.toggle("hidden", known === 0);
+    if (!known) { return; }
+
+    renderLinkList("linkList");
+    $("matrixBox").classList.toggle("hidden", !linksKnown());
+    if (linksKnown()) { renderMatrix(); }
+
+    var odd = oneSidedPairs();
+    var warn = $("asymWarn");
+    if (!odd.length) {
+      warn.classList.add("hidden");
+      return;
+    }
+    var parts = [];
+    for (var k = 0; k < odd.length; k++) {
+      parts.push("płytka <b>" + (odd[k].from + 1) + "</b> rusza zapadkę <b>" +
+        (odd[k].to + 1) + "</b>, ale nie odwrotnie");
+    }
+    warn.innerHTML = "<b>Uwaga — " + odd.length + " " +
+      plural(odd.length, "powiązanie działa", "powiązania działają", "powiązań działa") +
+      " tylko w jedną stronę:</b> " + parts.join("; ") + ". W tej grze sprzężone płytki " +
+      "ciągną się <b>wzajemnie</b>, więc to zwykle znak przeoczonego odczytu, a nie dziwnego " +
+      "zamka. Sprawdź te pary w grze — jeśli powiązanie faktycznie jest obustronne, dopisz je " +
+      "w tabeli niżej albo zrób rozpoznanie od nowa.";
+    warn.classList.remove("hidden");
+  }
+
+  /* ---------------- step 0: the layout the chest resets to ---------------- */
+
+  function atStart() {
+    if (!validPins(S.startPos, S.n) || !validPins(S.pos, S.n)) { return false; }
+    for (var i = 0; i < S.n; i++) {
+      if (S.pos[i] !== S.startPos[i]) { return false; }
+    }
+    return true;
+  }
+
+  function renderResetControl() {
+    var b = $("resetToStart"), tag = $("atStart");
+    var usable = (S.stage !== "setup") && validPins(S.startPos, S.n);
+
+    b.classList.toggle("hidden", !usable);
+    tag.classList.toggle("hidden", !(usable && atStart()));
+    tag.textContent = "Krok 0 — pozycja startowa";
+
+    b.textContent = (S.stage === "probe")
+      ? "↺ Reset — zacznij rozpoznanie od nowa"
+      : "↺ Wróć do pozycji startowej (krok 0)";
+  }
+
+  function resetToStart() {
+    if (!validPins(S.startPos, S.n)) { return; }
+    S.pos = S.startPos.slice();
+
+    if (S.stage === "probe") {
+      // Resetting mid-probe wipes the lock in game, so the readings so far no longer
+      // line up with anything. Start the discovery over rather than keep half of it.
+      startProbe();
+      return;
+    }
+
+    S.needsReset = false;
+    S.justLoaded = false;
+    solveAndRender();
+  }
+
+  /* ---------------- master render ---------------- */
+
+  function render() {
+    renderPlates();
+    renderSaved();
+    renderLinks();
+    renderResetControl();
+    $("cardSetup").classList.toggle("hidden", S.stage !== "setup");
+    $("cardProbe").classList.toggle("hidden", S.stage !== "probe");
+    $("cardSolve").classList.toggle("hidden", S.stage !== "solve");
+
+    if (S.stage === "setup") { renderSetup(); }
+    if (S.stage === "probe") { renderProbe(); }
+    if (S.stage === "solve") { renderSolve(); }
+
+    persistSession();
+  }
+
+  /* ---------------- wiring ---------------- */
+
+  $("toProbe").addEventListener("click", function () {
+    // Whatever you just read off the screen IS the chest's resting layout —
+    // that's what it snaps back to whenever a pick breaks, so that's what we remember.
+    S.startPos = S.pos.slice();
+    S.justLoaded = false;
+    if (linksKnown()) {
+      S.stage = "solve";
+      solveAndRender();
+    } else {
+      startProbe();
+    }
+  });
+  $("loadMatch").addEventListener("click", function () {
+    if (S.match && !S.match.mirrored) { openLock(S.match.idx); }
+  });
+  $("reProbe").addEventListener("click", function () {
+    S.E = [];
+    S.loadedName = "";
+    S.justLoaded = false;
+    S.startPos = S.pos.slice();
+    startProbe();
+  });
+  $("resetToStart").addEventListener("click", resetToStart);
+  $("noReset").addEventListener("click", function () {
+    if (validPins(S.probeEndPos, S.n)) { S.pos = S.probeEndPos.slice(); }
+    S.needsReset = false;
+    solveAndRender();
+  });
+  $("probeConfirm").addEventListener("click", confirmProbe);
+  $("probeJam").addEventListener("click", jamProbe);
+  $("probeSkip").addEventListener("click", skipPlate);
+  $("stepDone").addEventListener("click", stepDone);
+  $("stepBack").addEventListener("click", stepBack);
+  $("grind").addEventListener("click", function () {
+    S.grindFixes = diagnoseGrind();
+    render();
+  });
+
+  $("saveLock").addEventListener("click", function () {
+    var msg = $("saveMsg");
+    var result = saveLock($("lockName").value);
+    if (!result) {
+      msg.textContent = "Nadaj skrzyni nazwę, po której ją poznasz — np. „skrzynia u Diego”.";
+      msg.classList.remove("hidden");
+      $("lockName").focus();
+      return;
+    }
+    msg.textContent = result === "updated"
+      ? "Zaktualizowałem „" + S.loadedName + "”. Następnym razem pominiesz rozpoznanie."
+      : "Zapisane jako „" + S.loadedName + "”. Następnym razem pominiesz rozpoznanie.";
+    msg.classList.remove("hidden");
+    render();
+  });
+  $("lockName").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { $("saveLock").click(); }
+  });
+
+  $("reReadState").addEventListener("click", function () {
+    S.justLoaded = false;
+    S.stage = "setup";
+    render();
+  });
+  $("reset").addEventListener("click", function () {
+    S.stage = "setup";
+    S.E = [];
+    S.startPos = [];
+    S.probeEndPos = [];
+    S.needsReset = false;
+    S.loadedName = "";
+    S.justLoaded = false;
+    S.probeIdx = 0;
+    S.solution = [];
+    S.grouped = [];
+    S.runIdx = 0;
+    S.unsolvable = false;
+    S.freeMove = null;
+    $("saveMsg").classList.add("hidden");
+    $("lockName").value = "";
+    setPlateCount(S.n);
+  });
+
+  S.locks = migrateLocks(readJSON(LOCKS_KEY) || []);
+  if (!restoreSession()) { setPlateCount(5); }
+})();
+</script>
+
+<script>
+(function () {
+  var root = document.documentElement;
+  var saved = null;
+  try { saved = localStorage.getItem("wytrych-theme"); } catch (e) {}
+  if (saved) { root.setAttribute("data-theme", saved); }
+
+  document.getElementById("themeToggle").addEventListener("click", function () {
+    var dark = root.getAttribute("data-theme") === "dark" ||
+      (!root.hasAttribute("data-theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches);
+    var next = dark ? "light" : "dark";
+    root.setAttribute("data-theme", next);
+    try { localStorage.setItem("wytrych-theme", next); } catch (e) {}
+  });
+})();
+</script>
+</body>
+</html>
