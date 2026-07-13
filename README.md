@@ -32,7 +32,17 @@ The solver searches the whole state space (at most 7⁷ = 823,543 positions) and
 
 **Chest library.** A chest can be saved under a name. On the next visit it is recognised by its starting layout and the sequence is ready immediately — nothing to re-enter.
 
-**Phone-first.** Large touch targets, every action within thumb reach, installable to the home screen. Runs offline once loaded.
+## Built for the phone
+
+The tool is used in one hand while the other one plays, so the interface is designed for the thumb, not the mouse.
+
+- **Touch targets sized from the viewport.** Holes scale with screen width up to 44 px — Apple's minimum — and the lock fits without horizontal scrolling from an iPhone SE to a Pro Max.
+- **Only reachable holes are live.** A pin moves at most one hole per move, so during the learning step just 3 of the 7 holes accept a tap. Bigger effective target, and an impossible reading can't even be entered.
+- **Thumb bar.** A fixed bar at the bottom shows the one thing to do right now and carries every action for the current phase — so a whole lock is solved without scrolling. It calls the same handlers as the buttons in the cards; there is no second source of truth.
+- **Progressive disclosure.** Phases (Setup / Learn / Solve) and a *hide notes* switch that is remembered. Explanations are worth reading once and are noise on the twentieth lock.
+- **Safari specifics.** 16 px inputs (below that, Safari zooms the page on focus), `:hover` neutralised on touch (otherwise a highlight latches on after a tap), no 300 ms tap delay, no tap-flash, no text selection while tapping fast.
+- **Fits the hardware.** Safe-area insets for the Dynamic Island and the home indicator. Installable to the home screen, runs full-screen, works offline after the first load.
+- **Light and dark**, following the system, with a manual override.
 
 ## A tip from outside the tool
 
@@ -81,7 +91,17 @@ Solver przeszukuje całą przestrzeń stanów (najwyżej 7⁷ = 823 543 układó
 
 **Biblioteka skrzyń.** Skrzynię można zapisać pod nazwą. Przy kolejnej wizycie zostaje rozpoznana po układzie startowym, a sekwencja jest gotowa od razu — bez wpisywania czegokolwiek.
 
-**Pod telefon.** Duże cele do dotknięcia, każda akcja w zasięgu kciuka, da się dodać do ekranu początkowego. Po wczytaniu działa bez internetu.
+## Zrobione pod telefon
+
+Narzędzia używa się jedną ręką, gdy druga gra — więc interfejs jest zaprojektowany pod kciuk, nie pod mysz.
+
+- **Cele dotykowe liczone z szerokości ekranu.** Otwory skalują się do 44 px — minimum zalecane przez Apple — a zamek mieści się bez przewijania w bok od iPhone'a SE po Pro Max.
+- **Aktywne są tylko otwory osiągalne.** Zapadka przesuwa się najwyżej o jeden otwór na ruch, więc w fazie nauki tylko 3 z 7 otworów przyjmują dotknięcie. Większy cel — i niemożliwego odczytu nie da się nawet wprowadzić.
+- **Pasek kciuka.** Przyklejony na dole pokazuje jedyną rzecz do zrobienia teraz i zawiera wszystkie akcje bieżącej fazy — cały zamek robi się bez przewijania. Wywołuje te same funkcje co przyciski w kartach; nie ma drugiego źródła prawdy.
+- **Stopniowe odsłanianie.** Fazy (Ustawienie / Nauka / Rozwiązanie) i przełącznik *ukryj opisy*, który jest zapamiętywany. Wyjaśnienia warto przeczytać raz; przy dwudziestym zamku są już szumem.
+- **Specyfika Safari.** Pola 16 px (poniżej Safari przybliża stronę przy dotknięciu), `:hover` wyłączony na dotyku (inaczej podświetlenie zostaje przyklejone po stuknięciu), brak opóźnienia 300 ms, brak błysku, brak zaznaczania tekstu przy szybkim stukaniu.
+- **Dopasowane do sprzętu.** Marginesy bezpieczne dla Dynamic Island i paska gestów. Da się dodać do ekranu początkowego, uruchamia się na pełnym ekranie, po pierwszym wczytaniu działa bez internetu.
+- **Jasny i ciemny motyw**, zgodnie z systemem, z ręcznym przełącznikiem.
 
 ## Wskazówka spoza narzędzia
 
