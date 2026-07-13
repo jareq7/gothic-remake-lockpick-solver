@@ -18,20 +18,21 @@ If a plate is jammed in both directions, skip it and come back. At the end, pres
 
 **3 · Solve.** One instruction at a time: which plate, which way, how many times. The links and a live picture of the lock stay on screen. You can jump back to the starting layout, or fix a pin by clicking straight on the lock.
 
-## Why I built it
+## What's different
 
-Some chests in this game are just brutal. I have lockpicking maxed out and I'd still sit there retrying the same lock over and over — burning time and getting more annoyed with every attempt.
+Other solvers require the link matrix to be typed in by hand. Working out which plate drags which is the hard part of the puzzle — once that's done, the tool adds little. They also assume a direction convention, hence the usual disclaimer: *"if the solution doesn't work, invert all directions."*
 
-So I looked at the solvers that already exist. They're either too complicated or simply awkward to use. Every one of them wants the **link matrix typed in by hand** — which is precisely the part that takes the thinking. Do that, and you've done the puzzle yourself.
+This one requires only what is visible on screen: **which hole each pin sits in**. Directions are derived from the readings, not assumed. If the game draws the movement mirrored, the inversion is recorded during the learning step.
 
-This one asks only for what you can read straight off the screen: **which hole each pin sits in**. It figures out the rest — including the directions, which is why you never have to decide what moved "the same way" and what moved "the opposite way".
+**Consistency checks.** The solver validates its own model rather than trusting it:
 
-It also argues with itself. It warns when the links it learned come out one-sided (in this game coupled plates always pull each other *both* ways, so a one-way link means a misread), refuses readings that are physically impossible, and when a move grinds in game it tells you **which link must have been recorded with the wrong sign** — rather than quietly handing you another sequence that bends your pick.
+- Warns when the learned links come out one-sided. Coupled plates in this game pull each other *both* ways, so a one-way link means a misread.
+- Rejects physically impossible readings — a pin cannot move more than one hole per move.
+- On a grind reported at the first move, identifies **which link must have been recorded with the wrong sign**, instead of returning another sequence that bends the pick.
 
-Also:
+**Chest library.** A chest can be saved under a name. On the next visit it is recognised by its starting layout and the sequence is ready immediately — nothing to re-enter.
 
-- **Chest library.** Save a chest under a name. On your next visit it is recognised by its starting layout and hands you a ready sequence — nothing to re-enter.
-- **Phone-first.** Big touch targets, everything you need under your thumb, and it can be added to the home screen. Meant to be held in one hand while the other one plays.
+**Phone-first.** Large touch targets, every action within thumb reach, installable to the home screen. Runs offline once loaded.
 
 ## A tip from outside the tool
 
@@ -66,20 +67,21 @@ Jeśli płytka jest zablokowana w obie strony, pomijasz ją i wracasz później.
 
 **3 · Rozwiązanie.** Jedna instrukcja na raz: która płytka, w którą stronę, ile razy. Powiązania i podgląd zamka masz cały czas na oczach. Możesz wrócić do pozycji startowej albo poprawić zapadkę, klikając wprost na zamku.
 
-## Dlaczego to powstało
+## Czym się różni
 
-Niektóre skrzynie w tej grze są po prostu wredne. Mam wymaksowane otwieranie zamków, a i tak potrafiłem siedzieć nad jednym zamkiem, próbując raz za razem — traciłem czas i irytowałem się coraz bardziej z każdym podejściem.
+Inne solvery wymagają ręcznego wpisania macierzy powiązań. Rozgryzienie, która płytka ciągnie którą, to trudna część zagadki — gdy jest gotowa, narzędzie niewiele już wnosi. Zakładają też konwencję kierunków, stąd ich standardowa adnotacja: *„jeśli rozwiązanie nie działa, odwróć wszystkie kierunki"*.
 
-Więc zajrzałem do solverów, które już istnieją. Są albo zbyt skomplikowane, albo zwyczajnie niewygodne. Każdy chce, żeby **wklepać macierz powiązań ręcznie** — a to jest dokładnie ta część, która wymaga myślenia. Jak ją zrobisz, to zagadkę rozwiązałeś sam.
+Ten wymaga tylko tego, co widać na ekranie: **w którym otworze siedzi każda zapadka**. Kierunki wynikają z odczytów, nie z założenia. Jeśli gra rysuje ruch lustrzanie, odwrotność zapisuje się podczas nauki.
 
-Ten pyta wyłącznie o to, co da się odczytać wprost z ekranu: **w którym otworze siedzi każda zapadka**. Resztę wylicza sam — łącznie z kierunkami, więc nigdy nie musisz rozstrzygać, co poszło „w tę samą", a co „w przeciwną stronę".
+**Kontrola spójności.** Solver sprawdza własny model, zamiast mu ufać:
 
-Do tego spiera się sam ze sobą. Ostrzega, gdy wyuczone powiązania wychodzą jednostronne (w tej grze sprzężone płytki ciągną się *wzajemnie*, więc jednostronne = przeoczony odczyt), odrzuca odczyty fizycznie niemożliwe, a gdy ruch zgrzytnie w grze — wskazuje, **które powiązanie musiało zostać zapisane z odwrotnym znakiem**, zamiast po cichu podać kolejną sekwencję, która wygina wytrych.
+- Ostrzega, gdy wyuczone powiązania wychodzą jednostronne. Sprzężone płytki ciągną się w tej grze *wzajemnie*, więc jednostronne powiązanie oznacza przeoczony odczyt.
+- Odrzuca odczyty fizycznie niemożliwe — zapadka nie przesunie się o więcej niż jeden otwór na ruch.
+- Przy zgrzycie zgłoszonym na pierwszym ruchu wskazuje, **które powiązanie musiało zostać zapisane z odwrotnym znakiem**, zamiast podać kolejną sekwencję wyginającą wytrych.
 
-Poza tym:
+**Biblioteka skrzyń.** Skrzynię można zapisać pod nazwą. Przy kolejnej wizycie zostaje rozpoznana po układzie startowym, a sekwencja jest gotowa od razu — bez wpisywania czegokolwiek.
 
-- **Biblioteka skrzyń.** Zapisujesz skrzynię pod nazwą. Przy powrocie rozpoznaje ją po układzie startowym i podaje gotową sekwencję — bez żadnego wpisywania.
-- **Pod telefon.** Duże cele do kliknięcia, wszystko potrzebne pod kciukiem, da się dodać do ekranu początkowego. Ma się trzymać w jednej ręce, gdy druga gra.
+**Pod telefon.** Duże cele do dotknięcia, każda akcja w zasięgu kciuka, da się dodać do ekranu początkowego. Po wczytaniu działa bez internetu.
 
 ## Wskazówka spoza narzędzia
 
