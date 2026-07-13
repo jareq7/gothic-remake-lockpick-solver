@@ -18,11 +18,11 @@ If a plate is jammed in both directions, skip it and come back. At the end, pres
 
 **3 · Solve.** One instruction at a time: which plate, which way, how many times. The links and a live picture of the lock stay on screen. You can jump back to the starting layout, or fix a pin by clicking straight on the lock.
 
-## What's different
+## Details
 
-Other solvers require the link matrix to be typed in by hand. Working out which plate drags which is the hard part of the puzzle — once that's done, the tool adds little. They also assume a direction convention, hence the usual disclaimer: *"if the solution doesn't work, invert all directions."*
+The only input is what is visible on screen: **which hole each pin sits in**. Directions are derived from the readings, never assumed — if the game draws the movement mirrored, that inversion is recorded during the learning step.
 
-This one requires only what is visible on screen: **which hole each pin sits in**. Directions are derived from the readings, not assumed. If the game draws the movement mirrored, the inversion is recorded during the learning step.
+The solver searches the whole state space (at most 7⁷ = 823,543 positions) and returns the shortest sequence in which no pin — moved or dragged — ever leaves its plate. If no such sequence exists, it says so instead of guessing.
 
 **Consistency checks.** The solver validates its own model rather than trusting it:
 
@@ -67,11 +67,11 @@ Jeśli płytka jest zablokowana w obie strony, pomijasz ją i wracasz później.
 
 **3 · Rozwiązanie.** Jedna instrukcja na raz: która płytka, w którą stronę, ile razy. Powiązania i podgląd zamka masz cały czas na oczach. Możesz wrócić do pozycji startowej albo poprawić zapadkę, klikając wprost na zamku.
 
-## Czym się różni
+## Szczegóły
 
-Inne solvery wymagają ręcznego wpisania macierzy powiązań. Rozgryzienie, która płytka ciągnie którą, to trudna część zagadki — gdy jest gotowa, narzędzie niewiele już wnosi. Zakładają też konwencję kierunków, stąd ich standardowa adnotacja: *„jeśli rozwiązanie nie działa, odwróć wszystkie kierunki"*.
+Jedyne dane wejściowe to to, co widać na ekranie: **w którym otworze siedzi każda zapadka**. Kierunki wynikają z odczytów, nigdy z założenia — jeśli gra rysuje ruch lustrzanie, ta odwrotność zapisuje się podczas nauki.
 
-Ten wymaga tylko tego, co widać na ekranie: **w którym otworze siedzi każda zapadka**. Kierunki wynikają z odczytów, nie z założenia. Jeśli gra rysuje ruch lustrzanie, odwrotność zapisuje się podczas nauki.
+Solver przeszukuje całą przestrzeń stanów (najwyżej 7⁷ = 823 543 układów) i zwraca najkrótszą sekwencję, w której żadna zapadka — ani przesuwana, ani pociągnięta — nie wyjdzie poza swoją płytkę. Jeśli takiej sekwencji nie ma, mówi o tym wprost, zamiast zgadywać.
 
 **Kontrola spójności.** Solver sprawdza własny model, zamiast mu ufać:
 
