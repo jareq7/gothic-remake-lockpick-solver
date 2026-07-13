@@ -57,7 +57,10 @@ open index.html      # run it
 ./tests/run.sh       # 9 test suites
 ```
 
-The tests drive the **real script lifted out of `index.html`** against a simulated game that refuses illegal moves — so they can never drift from the app. Architecture and the decisions that must not be reverted: [`CLAUDE.md`](CLAUDE.md).
+The tests drive the **real script lifted out of `index.html`** against a simulated game that refuses illegal moves — so they can never drift from the app.
+
+- [`CLAUDE.md`](CLAUDE.md) — lock model, the decisions that must not be reverted, what each test suite guards.
+- [`POSTMORTEM.md`](POSTMORTEM.md) — what went wrong while building this, why, and what came out of it. Worth reading before "simplifying" any of the input forms.
 
 ---
 
